@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171725">
+  <meta name="description" content="Jesse's Studio — explore a cozy interactive engineering gallery and electronics workshop. Walk through finished projects and works in progress.">
+  <title>Jesse's Studio — An Interactive Engineering Portfolio</title>
+  <link rel="stylesheet" href="./css/site.css">
+  <script type="module" src="./js/main.js"></script>
+</head>
+<body>
+  <a href="#game-area" class="skip-link">Skip to interactive studio</a>
+  <header class="topbar">
+    <a class="brand" href="#game-area"><span class="brand-mark">J<span>★</span></span><span>JESSE'S STUDIO<small>BUILT AFTER HOURS</small></span></a>
+    <nav class="top-links" aria-label="Main links">
+      <button class="nav-link" data-room="lobby" type="button">About</button>
+      <button class="nav-link" data-room="workshop" type="button">Workshop</button>
+      <button class="nav-link" data-room="gallery" type="button">Gallery</button>
+      <button class="nav-link" id="project-index" type="button">All projects</button>
+    </nav>
+    <div class="top-actions">
+      <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> LOFI: OFF</button>
+      <button id="resume-link" class="resume-link" type="button">RESUME ↗</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro" aria-label="Introduction"><div>
+      <div class="kicker"><span class="star">✦</span> AN INTERACTIVE PORTFOLIO <span class="divider">/</span> UMass Lowell • Computer Engineering</div>
+      <h1>Somewhere between <em>an art gallery</em><br>and an electronics lab.</h1>
+      <p>Come on in. Finished builds are hanging in the gallery; the new ideas are probably scattered across the workbench.</p>
+    </div><div class="intro-chips"><span>✦ 3 ROOMS</span><span>↔ WALK & EXPLORE</span></div></section>
+
+    <section id="game-area" class="game-shell" aria-label="Walkable portfolio studio">
+      <div class="game-topbar"><div><span class="indicator"></span><strong id="room-label">01 / THE LOBBY</strong><span class="room-subtitle" id="room-subtitle">A WARM WELCOME</span></div><div class="game-top-right"><span id="discovery-label">0 / 5 EXHIBITS DISCOVERED</span><button id="help" type="button">? CONTROLS</button></div></div>
+      <div class="game-container" id="game-container" tabindex="0" aria-label="Interactive walkable studio. Use A and D or arrow keys to walk, W and S to move up and down, E to interact. You can also click objects.">
+        <canvas id="game" width="1200" height="675" aria-label="Pixel-art walkable portfolio. Three rooms: lobby, electronics workshop, and completed projects gallery.">Canvas not supported. Use the All Projects menu to view this portfolio.</canvas>
+        <div id="scene-caption" class="scene-caption" aria-live="polite">WELCOME TO THE STUDIO</div>
+        <div id="interact-hint" class="interact-hint" hidden>PRESS <kbd>E</kbd> TO INSPECT</div>
+        <div id="fade-screen" class="fade-screen" aria-hidden="true"></div>
+      </div>
+      <div class="game-footer">
+        <div class="controls-desktop"> <kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd> WALK <span>·</span> <kbd>W</kbd> <kbd>S</kbd> CHANGE DEPTH <span>·</span> <kbd>E</kbd> / <kbd>ENTER</kbd> INSPECT <span>·</span> CLICK AN EXHIBIT</div>
+        <div class="mobile-controls" aria-label="Touch movement and interaction controls"><div><button class="pad-btn" data-move="left" aria-label="Move left" type="button">◀</button><button class="pad-btn" data-move="up" aria-label="Move back" type="button">▲</button><button class="pad-btn" data-move="down" aria-label="Move forward" type="button">▼</button><button class="pad-btn" data-move="right" aria-label="Move right" type="button">▶</button></div><button id="touch-interact" type="button">INSPECT / E</button></div>
+        <div class="room-tabs" role="group" aria-label="Go to room"><button data-room="workshop" type="button">01 WORKSHOP</button><button data-room="lobby" class="active" type="button">02 LOBBY</button><button data-room="gallery" type="button">03 GALLERY</button></div>
+      </div>
+    </section>
+    <section class="bottom-strip"><div><div class="strip-label">NOW EXHIBITING</div><h2>Built, debugged, <em>occasionally fried.</em></h2><p>Hardware has a story. Click any exhibit for design details, things learned, and links to the project.</p></div><div class="strip-actions"><button class="primary" id="browse-all" type="button">BROWSE ALL PROJECTS <span>↗</span></button><button class="secondary" data-room="lobby" type="button">ABOUT THE BUILDER <span>→</span></button></div></section>
+  </main>
+  <footer class="footer"><span>© <span id="year"></span> JESSE'S STUDIO</span><span>MADE WITH CAFFEINE, COPPER & CURIOSITY</span><a href="#game-area">BACK TO THE STUDIO ↑</a></footer>
+
+  <dialog id="info-dialog" class="dialog" aria-labelledby="modal-title"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow" id="modal-eyebrow">EXHIBIT / 01</span><button id="close-dialog" class="close-dialog" type="button" aria-label="Close">✕</button></div><div class="modal-art" id="modal-art" aria-hidden="true"></div><h2 id="modal-title"></h2><p id="modal-summary" class="modal-summary"></p><div id="modal-content" class="modal-content"></div><div id="modal-tags" class="modal-tags"></div><div id="modal-links" class="modal-links"></div></div></dialog>
+  <dialog id="list-dialog" class="dialog list-dialog" aria-labelledby="list-heading"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow">THE STUDIO COLLECTION</span><button id="close-list" class="close-dialog" type="button" aria-label="Close">✕</button></div><h2 id="list-heading">Every project has a story.</h2><p class="modal-summary">A quick way through the portfolio — no walking required.</p><div id="all-projects-list" class="all-projects-list"></div></div></dialog>
+  <dialog id="help-dialog" class="dialog help-dialog" aria-labelledby="help-heading"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow">YOUR VISITOR'S GUIDE</span><button id="close-help" class="close-dialog" type="button" aria-label="Close">✕</button></div><h2 id="help-heading">Welcome, wanderer.</h2><p>Use <strong>A/D</strong> or <strong>←/→</strong> to walk around. Press <strong>W/S</strong> to move toward or away from the wall. Walk up to anything marked with a sparkle, then press <strong>E</strong> or <strong>Enter</strong> to interact. You can also click exhibits directly.</p><p>Use the doors to explore the workshop and gallery, or the buttons below the game to jump between rooms. The room displays are decorative; the project details are real.</p><button id="help-ok" type="button" class="primary">LET'S EXPLORE →</button></div></dialog>
+  <audio id="lofi-audio" src="./assets/audio/night-shift-lofi.wav" preload="none" loop></audio>
+</body>
+</html>

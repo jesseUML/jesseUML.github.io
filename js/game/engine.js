@@ -1,0 +1,64 @@
+import {ROOM_INFO,roomObjects,WORLD_W,WALK_MIN,WALK_MAX} from './rooms.js';
+import {drawRoom,drawCharacter,drawMarker,txt,box,r} from './art.js';
+const W=1200,H=675;
+export class StudioGame{
+  constructor({canvas,notify,inspect,discover}){
+    this.canvas=canvas;this.c=canvas.getContext('2d',{alpha:false});this.notify=notify;this.inspect=inspect;this.discover=discover;
+    this.room='lobby';this.x=800;this.y=578;this.camera=250;this.facing=1;this.walking=false;this.keys=new Set();this.pointerX=-1;this.pointerY=-1;
+    this.nearest=null;this.paused=false;this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.last=0;this.time=0;this.bind();this.changeUi();requestAnimationFrame(t=>this.frame(t));
+  }
+  objects(){return roomObjects[this.room]}
+  nearestObject(){let best=null,dist=Infinity;for(const item of this.objects()){const d=Math.abs(this.x-item.x);if(d<dist){dist=d;best=item}}return dist<113?best:null}
+  bind(){const codes={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyW:'up',ArrowUp:'up',KeyS:'down',ArrowDown:'down'};
+    window.addEventListener('keydown',e=>{
+      if(document.querySelector('dialog[open]'))return;
+      if(e.target instanceof HTMLElement && ['INPUT','TEXTAREA','BUTTON'].includes(e.target.tagName))return;
+      if(codes[e.code]){e.preventDefault();this.keys.add(codes[e.code]);}
+      if(['KeyE','Enter','Space'].includes(e.code)&&!e.repeat){e.preventDefault();this.interactNearest()}
+    });
+    window.addEventListener('keyup',e=>{if(codes[e.code])this.keys.delete(codes[e.code])});
+    window.addEventListener('blur',()=>this.keys.clear());
+    this.canvas.addEventListener('pointermove',e=>{const rect=this.canvas.getBoundingClientRect();this.pointerX=(e.clientX-rect.left)*W/rect.width+this.camera;this.pointerY=(e.clientY-rect.top)*H/rect.height});
+    this.canvas.addEventListener('pointerleave',()=>{this.pointerX=-1;this.pointerY=-1;this.canvas.style.cursor='default'});
+    this.canvas.addEventListener('click',e=>{const item=this.pointed();if(item)this.activate(item);else this.canvas.parentElement.focus()});
+    for(const button of document.querySelectorAll('[data-move]')){
+      const dir=button.dataset.move;
+      button.addEventListener('pointerdown',e=>{e.preventDefault();this.keys.add(dir);try{button.setPointerCapture(e.pointerId)}catch{}});
+      for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,()=>this.keys.delete(dir));
+    }
+    document.getElementById('touch-interact').addEventListener('click',()=>this.interactNearest());
+    document.addEventListener('visibilitychange',()=>{this.paused=document.hidden;this.last=0});
+  }
+  pointHit(item){const dx=Math.abs(this.pointerX-item.x),dy=this.pointerY;const radius=item.type==='project'?185:item.type==='door'?115:135;return dx<radius && dy>195 && dy<545}
+  pointed(){if(this.pointerX<0)return null;const objects=this.objects().filter(item=>this.pointHit(item));if(!objects.length)return null;return objects.sort((a,b)=>Math.abs(this.pointerX-a.x)-Math.abs(this.pointerX-b.x))[0]}
+  interactNearest(){if(document.querySelector('dialog[open]'))return;const obj=this.nearestObject();if(obj)this.activate(obj)}
+  activate(item){if(item.type==='door')this.toRoom(item.target,item.id);else this.inspect(item)}
+  toRoom(room,source){if(!ROOM_INFO[room])return;this.room=room;this.x=source?.includes('to-lobby')?(source.startsWith('gallery')?250:240):room==='gallery'?300:room==='workshop'?310:800;
+    this.y=578;this.camera=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.pointerX=-1;this.nearest=null;this.changeUi();this.notify(`WELCOME TO ${ROOM_INFO[room].name}`);}
+  changeUi(){const ri=ROOM_INFO[this.room];document.getElementById('room-label').textContent=`${ri.number} / ${ri.name}`;document.getElementById('room-subtitle').textContent=ri.subtitle;for(const button of document.querySelectorAll('.room-tabs [data-room]'))button.classList.toggle('active',button.dataset.room===this.room)}
+  tick(dt){if(this.paused)return;const dx=(Number(this.keys.has('right'))-Number(this.keys.has('left')));const dy=(Number(this.keys.has('down'))-Number(this.keys.has('up')));
+    this.walking=!!(dx||dy);const speed=this.reduced?190:210;this.x=Math.max(44,Math.min(WORLD_W-44,this.x+dx*speed*dt));this.y=Math.max(WALK_MIN,Math.min(WALK_MAX,this.y+dy*speed*.52*dt));if(dx)this.facing=dx;
+    const target=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.camera+=(target-this.camera)*Math.min(1,dt*7);this.nearest=this.nearestObject();
+    const hint=document.getElementById('interact-hint');hint.hidden=!this.nearest; if(this.nearest)hint.innerHTML=`PRESS <kbd>E</kbd> — ${this.nearest.label}`;
+    const over=this.pointed();this.canvas.style.cursor=over?'pointer':'default';
+  }
+  frame(ms){const dt=this.last?Math.min(.05,(ms-this.last)/1000):0;this.last=ms;this.time=ms*.001;this.tick(dt);
+    const c=this.c;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W,H);
+    c.save();c.translate(-Math.round(this.camera),0);drawRoom(c,this.room,this.reduced?0:this.time,this.camera);
+    for(const obj of this.objects()){
+      const x=obj.x;if(x<this.camera-130||x>this.camera+W+130)continue;
+      const near=Math.abs(this.x-x)<112;const selected=(this.pointed()===obj);
+      drawMarker(c,x,(obj.type==='door'?350:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='scope'?374:obj.type==='resume'?412:obj.type==='revisions'?245:300),this.reduced?0:this.time,near||selected);
+      if(near||selected){
+        const yy=obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?286:obj.type==='scope'?330:obj.type==='resume'?363:258;
+        c.save();c.font='bold 13px monospace';let ww=Math.max(162,c.measureText(obj.label).width+28);const lx=Math.max(0,Math.min(WORLD_W-ww,x-ww/2));box(c,lx,yy,ww,31,'#222b39e9','#eec58c',2);txt(c,obj.label,lx+ww/2,yy+20,13,'#ffe1b7','center');c.restore();
+      }
+    }
+    drawCharacter(c,this.x,this.y,this.reduced?0:this.time,this.walking,this.facing);
+    c.restore();
+    // small room / navigation key at top, independent of camera
+    box(c,15,15,200,32,'#171d2bce','#76645b',1);txt(c,`${ROOM_INFO[this.room].number}  ${ROOM_INFO[this.room].name}`,27,36,14,'#ffddb2');
+    requestAnimationFrame(t=>this.frame(t));
+  }
+}
