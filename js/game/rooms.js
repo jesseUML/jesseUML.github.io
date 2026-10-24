@@ -4,7 +4,7 @@ export const ROOM_INFO={
   gallery:{name:'THE GALLERY',number:'03',subtitle:'THE FINISHED COLLECTION',spawn:400,sky:'#182035'}
 };
 export const WORLD_W=1750;
-export const WALK_MIN=518, WALK_MAX=600;
+export const WALK_MIN=518, WALK_MAX=646;
 export const roomObjects={
   lobby:[
     {id:'lobby-to-workshop',type:'door',x:104,y:440,target:'workshop',label:'ENTER WORKSHOP',hint:'TO THE WORKBENCH'},

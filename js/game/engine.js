@@ -1,10 +1,11 @@
 import {ROOM_INFO,roomObjects,WORLD_W,WALK_MIN,WALK_MAX} from './rooms.js';
 import {drawRoom,drawCharacter,drawMarker,txt,box,r} from './art.js';
+import {moveWithCollision} from './collision.js';
 const W=1200,H=675;
 export class StudioGame{
   constructor({canvas,notify,inspect,discover}){
     this.canvas=canvas;this.c=canvas.getContext('2d',{alpha:false});this.notify=notify;this.inspect=inspect;this.discover=discover;
-    this.room='lobby';this.x=800;this.y=578;this.camera=250;this.facing=1;this.walking=false;this.keys=new Set();this.pointerX=-1;this.pointerY=-1;
+    this.room='lobby';this.x=800;this.y=624;this.camera=250;this.facing=1;this.walking=false;this.keys=new Set();this.pointerX=-1;this.pointerY=-1;
     this.nearest=null;this.paused=false;this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.last=0;this.time=0;this.bind();this.changeUi();requestAnimationFrame(t=>this.frame(t));
   }
@@ -35,10 +36,15 @@ export class StudioGame{
   interactNearest(){if(document.querySelector('dialog[open]'))return;const obj=this.nearestObject();if(obj)this.activate(obj)}
   activate(item){if(item.type==='door')this.toRoom(item.target,item.id);else this.inspect(item)}
   toRoom(room,source){if(!ROOM_INFO[room])return;this.room=room;this.x=source?.includes('to-lobby')?(source.startsWith('gallery')?250:240):room==='gallery'?300:room==='workshop'?310:800;
-    this.y=578;this.camera=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.pointerX=-1;this.nearest=null;this.changeUi();this.notify(`WELCOME TO ${ROOM_INFO[room].name}`);}
+    this.y=624;this.camera=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.pointerX=-1;this.nearest=null;this.changeUi();this.notify(`WELCOME TO ${ROOM_INFO[room].name}`);}
   changeUi(){const ri=ROOM_INFO[this.room];document.getElementById('room-label').textContent=`${ri.number} / ${ri.name}`;document.getElementById('room-subtitle').textContent=ri.subtitle;for(const button of document.querySelectorAll('.room-tabs [data-room]'))button.classList.toggle('active',button.dataset.room===this.room)}
   tick(dt){if(this.paused)return;const dx=(Number(this.keys.has('right'))-Number(this.keys.has('left')));const dy=(Number(this.keys.has('down'))-Number(this.keys.has('up')));
-    this.walking=!!(dx||dy);const speed=this.reduced?190:210;this.x=Math.max(44,Math.min(WORLD_W-44,this.x+dx*speed*dt));this.y=Math.max(WALK_MIN,Math.min(WALK_MAX,this.y+dy*speed*.52*dt));if(dx)this.facing=dx;
+    const speed=this.reduced?190:210;const length=Math.hypot(dx,dy)||1;
+    const wantedX=Math.max(44,Math.min(WORLD_W-44,this.x+dx/length*speed*dt));
+    const wantedY=Math.max(WALK_MIN,Math.min(WALK_MAX,this.y+dy/length*speed*.52*dt));
+    const moved=moveWithCollision(this.room,this.x,this.y,wantedX-this.x,wantedY-this.y);
+    this.walking=Math.abs(moved.x-this.x)+Math.abs(moved.y-this.y)>.05;
+    this.x=moved.x;this.y=moved.y;if(dx&&this.walking)this.facing=dx;
     const target=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.camera+=(target-this.camera)*Math.min(1,dt*7);this.nearest=this.nearestObject();
     const hint=document.getElementById('interact-hint');hint.hidden=!this.nearest; if(this.nearest)hint.innerHTML=`PRESS <kbd>E</kbd> — ${this.nearest.label}`;
     const over=this.pointed();this.canvas.style.cursor=over?'pointer':'default';

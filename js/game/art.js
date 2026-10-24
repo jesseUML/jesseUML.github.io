@@ -13,13 +13,35 @@ export function skyWindow(c,x,y,w,h,room,time,camera){
   c.save();c.beginPath();c.rect(x,y,w,h);c.clip();
   const grad=c.createLinearGradient(0,y,0,y+h);grad.addColorStop(0,'#11182e');grad.addColorStop(.5,'#273454');grad.addColorStop(1,'#996e6b');r(c,x,y,w,h,grad);
   radial(c,x+w*.58,y+h*.81,w*.55,h*.75,'#ce7e75',.16);
-  for(let j=0;j<48;j++){const xx=x+seeded(j+6)*w,yy=y+seeded(j+83)*h*.48;const a=.22+seeded(j+280)*.35;r(c,xx,yy,seeded(j+9)>0.8?2:1,2,`rgba(255,241,209,${a})`)}
+  // A calm fixed starfield: no flickering dots or procedural re-seeding.
+  for(let j=0;j<8;j++){
+    const xx=Math.round(x+10+seeded(j+6)*(w-20));
+    const yy=Math.round(y+10+seeded(j+83)*h*.32);
+    r(c,xx,yy,1,1,'rgba(234,230,226,.24)');
+  }
   const base=y+h;
   for(let depth=0;depth<2;depth++){
-    const hmult=depth===0?.45:.68;const col=depth===0?'#313850':'#1a283d';const offset=depth===0?-camera*.045:-camera*.11;
-    for(let i=0;i<26;i++){const bx=x+i*42+offset%42,bw=30+seeded(i+depth*59)*18,bh=35+seeded(i+depth*17+7)*h*hmult;
+    const hmult=depth===0?.45:.68;
+    const col=depth===0?'#313850':'#1b293d';
+    const offset=Math.round(-camera*(depth===0?.045:.11));
+    const first=Math.floor(-offset/42)-1;
+    const count=Math.ceil(w/42)+4;
+    for(let i=first;i<first+count;i++){
+      // World-space building IDs stay constant as the camera scrolls.
+      const bx=Math.round(x+i*42+offset);
+      const bw=Math.round(30+seeded(i+depth*59)*18);
+      const bh=Math.round(35+seeded(i+depth*17+7)*h*hmult);
       r(c,bx,base-bh,bw,bh,col);
-      for(let wx=bx+5;wx<bx+bw-5;wx+=9){for(let wy=base-bh+10;wy<base-7;wy+=13){if(seeded(wx*3+wy*7+depth*81)>.53){r(c,wx,wy,3,4,depth===0?'#7e7778':'#d19d73')}}}
+      const rows=Math.floor((bh-16)/13), cols=Math.floor((bw-10)/9);
+      for(let row=0;row<rows;row++)for(let column=0;column<cols;column++){
+        // IMPORTANT: illumination is tied to the building/window identity,
+        // never to moving screen coordinates (which caused sparkling lights).
+        const lit=seeded((depth+1)*9999+(i+3)*527+row*71+column*17);
+        if(lit>.69){
+          const wx=bx+5+column*9, wy=base-bh+10+row*13;
+          r(c,wx,wy,3,4,depth===0?'#736d78':'#aa8979');
+        }
+      }
     }
   }
   r(c,x+w*.50,y,5,h,'#332d35');r(c,x,y+h*.57,w,6,'#332d35');r(c,x+8,y+7,w-16,2,'#a08b8f44');c.restore();
@@ -91,13 +113,47 @@ function drawWorkshop(c,time,camera){wall(c,'workshop');floor(c,'workshop');skyW
   for(const [x,y,col] of [[644,462,'#f5bd6a'],[1035,471,'#6ce2c4'],[1430,477,'#e6ac5e']]){radial(c,x,y,19,19,col,.18);r(c,x-2,y-2,4,4,col)}
 }
 export function drawRoom(c,room,time,camera){if(room==='gallery')drawGallery(c,time);else if(room==='workshop')drawWorkshop(c,time,camera);else drawLobby(c,time,camera)}
-export function drawCharacter(c,x,feet,time,walking,facing){let stride=walking?Math.sin(time*13)*5:0;const bob=walking?Math.abs(Math.sin(time*13))*2:Math.sin(time*1.9)*.8;c.save();c.translate(x,feet-bob);c.scale(facing,1);radial(c,0,4,28,10,'#11131b',.35);
-  // legs and shoes
-  r(c,-13,-31+stride,10,30,'#303b53');r(c,4,-31-stride,10,30,'#29384d');r(c,-16,-5+stride,15,7,'#141c28');r(c,3,-5-stride,15,7,'#141c28');
-  // orange jacket + backpack
-  r(c,-20,-72,40,44,'#bf7b5b');r(c,-25,-65,8,28,'#5b5d5e');r(c,17,-65,7,28,'#dfad81');r(c,-7,-67,18,30,'#d99a72');r(c,-1,-66,2,35,'#865b50');r(c,-8,-34,16,4,'#ebbd87');
-  // neck, head, hair
-  r(c,-7,-79,14,11,'#c98d6a');r(c,-15,-109,30,31,'#dfad87');r(c,-17,-110,34,12,'#27252e');r(c,-18,-103,7,14,'#27252e');r(c,12,-105,5,9,'#27252e');r(c,1,-96,4,3,'#34343e');r(c,9,-95,3,3,'#34343e');r(c,3,-84,8,2,'#9a6555');
-  // camera/ID badge
-  r(c,13,-52,8,11,'#ece1c6');r(c,15,-49,4,4,'#88c2af');c.restore()}
+export function drawCharacter(c,x,feet,time,walking,facing){
+  // Little side-to-side two-step with alternate planted/lifted shoes,
+  // opposing arm swing and a little jacket/head bob. All art is vector-like
+  // canvas pixels so the animation works without any external sprite sheet.
+  const cycle=walking?Math.sin(time*11.5):0;
+  const stride=walking?cycle*7:0;
+  const liftLeft=walking?Math.max(0,cycle)*5:0;
+  const liftRight=walking?Math.max(0,-cycle)*5:0;
+  const bob=walking?Math.abs(cycle)*2.4:Math.sin(time*1.6)*.65;
+  c.save();c.translate(Math.round(x),Math.round(feet-bob));c.scale(facing,1);
+  radial(c,0,4,32,11,'#11131b',.35);
+  // Legs and shoes: opposing legs step forward and lift slightly.
+  r(c,-13+stride*.55,-33-liftLeft,11,29,'#303b53');
+  r(c,3-stride*.55,-33-liftRight,11,29,'#29384d');
+  r(c,-17+stride*.75,-6-liftLeft,17,7,'#131b26');
+  r(c,3-stride*.75,-6-liftRight,17,7,'#141d2a');
+  r(c,-15+stride*.75,-6-liftLeft,7,2,'#82808a');
+  r(c,4-stride*.75,-6-liftRight,7,2,'#82808a');
+  // Far arm goes behind the torso, near arm swings opposite the foot.
+  r(c,-24-stride*.42,-65+Math.abs(cycle)*2,10,27,'#6f6063');
+  r(c,-25-stride*.42,-40+Math.abs(cycle)*2,9,7,'#c88f70');
+  // Warm jacket/backpack and central seam.
+  r(c,-19,-72,39,42,'#bc7959');
+  r(c,-19,-70,8,36,'#61545d');
+  r(c,-9,-65,22,32,'#d79871');
+  r(c,0,-65,2,34,'#84564c');
+  r(c,-9,-36,19,5,'#e9bb87');
+  r(c,17+stride*.42,-65,9,26,'#d8a37c');
+  r(c,18+stride*.42,-40+Math.max(0,cycle)*2,8,6,'#d3a17e');
+  // Head with subtle motion and an occasional idle blink.
+  const lean=walking?Math.round(cycle*.9):0;
+  r(c,-7+lean,-79,14,10,'#c98d6a');
+  r(c,-15+lean,-109,30,31,'#dfad87');
+  r(c,-17+lean,-110,34,12,'#27252e');
+  r(c,-18+lean,-103,7,14,'#27252e');
+  r(c,12+lean,-105,5,9,'#27252e');
+  const blink=time%5.3>5.15;
+  if(blink)r(c,1+lean,-94,12,1,'#34343e');
+  else{r(c,1+lean,-96,4,3,'#34343e');r(c,9+lean,-95,3,3,'#34343e');}
+  r(c,3+lean,-84,8,2,'#9a6555');
+  r(c,13,-52,8,11,'#ece1c6');r(c,15,-49,4,4,'#88c2af');
+  c.restore();
+}
 export function drawMarker(c,x,y,time,near=false){const v=Math.sin(time*3)*4;c.save();c.shadowColor='#ffe1a8';c.shadowBlur=near?24:12;const color=near?'#ffe5b1':'#eec692';r(c,x-4,y-16+v,8,8,color);r(c,x-2,y-22+v,4,20,color);r(c,x-10,y-14+v,20,4,color);c.restore()}
