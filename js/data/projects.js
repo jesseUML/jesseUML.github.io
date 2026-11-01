@@ -7,14 +7,14 @@ export const projects = [
     title: 'STM32 LED Business Card',
     code: 'EXHIBIT 01 / REV 1',
     status: 'completed', location: 'wall', art: 'led-card',
-    displaySrc: './assets/images/projects/stm32-rev1-front.webp',
+    displaySrc: './assets/images/projects/stm32-rev1-components.webp',
     summary: 'A pocket-sized portfolio: a custom PCB, an 8×8 LED matrix, and motion-reactive firmware.',
     description: 'Designed around the STM32G030 microcontroller with a multiplexed LED matrix and a six-axis inertial sensor. Different animations and interactions turn a business card into something you can actually demo.',
     lessons: 'Small footprints, decoupling placement, LED brightness, and physical rework all matter. Several revisions taught me more than the first successful power-on.',
     tags: ['STM32G030', 'Embedded C', 'IMU', 'PCB Layout'],
     photos: [
-      {src:'./assets/images/projects/stm32-rev1-front.webp',caption:'Rev 1 — populated front with STM32, LED array, and coin-cell holder'},
-      {src:'./assets/images/projects/stm32-rev1-back.webp',caption:'Rev 1 — back with QR code and contact details'}
+      {src:'./assets/images/projects/stm32-rev1-components.webp',caption:'Rev 1 — populated front with STM32, LED array, and coin-cell holder'},
+      {src:'./assets/images/projects/stm32-rev1-qr.webp',caption:'Rev 1 — back with QR code and contact details'}
     ],
     github: ''
   },

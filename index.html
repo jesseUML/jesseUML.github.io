@@ -27,10 +27,10 @@
 
   <main>
     <section class="intro" aria-label="Introduction"><div>
-      <div class="kicker"><span class="star">✦</span> AN INTERACTIVE PORTFOLIO <span class="divider">/</span> UMass Lowell • Computer Engineering</div>
+      <div class="kicker"><span class="star">✦</span> JESSE SILVA <span class="divider">/</span> Computer Engineering • UMass Lowell</div>
       <h1>Somewhere between <em>an art gallery</em><br>and an electronics lab.</h1>
       <p>Come on in. Finished builds are hanging in the gallery; the new ideas are probably scattered across the workbench.</p>
-    </div><div class="intro-chips"><span>✦ 3 ROOMS</span><span>↔ WALK & EXPLORE</span></div></section>
+    </div><div class="intro-actions"><a class="primary" href="#game-area">ENTER THE STUDIO <span>↓</span></a><button class="secondary" id="hero-projects" type="button">VIEW PROJECTS <span>↗</span></button></div></section>
 
     <section id="game-area" class="game-shell" aria-label="Walkable portfolio studio">
       <div class="game-topbar"><div><span class="indicator"></span><strong id="room-label">01 / THE LOBBY</strong><span class="room-subtitle" id="room-subtitle">A WARM WELCOME</span></div><div class="game-top-right"><span id="discovery-label">0 / 5 EXHIBITS DISCOVERED</span><button id="help" type="button">? CONTROLS</button></div></div>
@@ -43,7 +43,7 @@
       <div class="game-footer">
         <div class="controls-desktop"> <kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd> WALK <span>·</span> <kbd>W</kbd> <kbd>S</kbd> CHANGE DEPTH <span>·</span> <kbd>E</kbd> / <kbd>ENTER</kbd> INSPECT <span>·</span> CLICK AN EXHIBIT</div>
         <div class="mobile-controls" aria-label="Touch movement and interaction controls"><div><button class="pad-btn" data-move="left" aria-label="Move left" type="button">◀</button><button class="pad-btn" data-move="up" aria-label="Move back" type="button">▲</button><button class="pad-btn" data-move="down" aria-label="Move forward" type="button">▼</button><button class="pad-btn" data-move="right" aria-label="Move right" type="button">▶</button></div><button id="touch-interact" type="button">INSPECT / E</button></div>
-        <div class="room-tabs" role="group" aria-label="Go to room"><button data-room="workshop" type="button">01 WORKSHOP</button><button data-room="lobby" class="active" type="button">02 LOBBY</button><button data-room="gallery" type="button">03 GALLERY</button></div>
+        <div class="room-tabs" role="group" aria-label="Go to room"><button data-room="workshop" type="button">WORKSHOP</button><button data-room="lobby" class="active" type="button">LOBBY</button><button data-room="gallery" type="button">GALLERY</button></div>
       </div>
     </section>
     <section class="bottom-strip"><div><div class="strip-label">NOW EXHIBITING</div><h2>Built, debugged, <em>occasionally fried.</em></h2><p>Hardware has a story. Click any exhibit for design details, things learned, and links to the project.</p></div><div class="strip-actions"><button class="primary" id="browse-all" type="button">BROWSE ALL PROJECTS <span>↗</span></button><button class="secondary" data-room="lobby" type="button">ABOUT THE BUILDER <span>→</span></button></div></section>

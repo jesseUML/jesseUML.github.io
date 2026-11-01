@@ -73,8 +73,6 @@ export class StudioGame{
     }
     drawCharacter(c,this.x,this.y,this.reduced?0:this.time,this.walking,this.facing,this.stepPhase,this.reduced?Math.min(.22,this.walkBlend):this.walkBlend,this.walkDirection);
     c.restore();
-    // small room / navigation key at top, independent of camera
-    box(c,15,15,200,32,'#171d2bce','#76645b',1);txt(c,`${ROOM_INFO[this.room].number}  ${ROOM_INFO[this.room].name}`,27,36,14,'#ffddb2');
     requestAnimationFrame(t=>this.frame(t));
   }
 }
