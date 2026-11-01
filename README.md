@@ -55,6 +55,15 @@ js/
 index.html     Page structure
 ```
 
+## Adding a new project
+
+1. Put the images in `assets/images/projects/` (WebP, about 1600px wide at most).
+2. In `js/data/projects.js`, copy an existing entry and change the fields. The comment at the top of that file explains each field.
+3. If it's `'completed'`, you're done: it gets the next frame in the gallery.
+4. If it's `'wip'`, also give it a bench spot in `BENCH_SLOTS` in `js/game/rooms.js`. The main bench is fairly full, so you may need to widen the workshop (`ROOM_W.workshop`) and shift props in `drawWorkshop()` in `js/game/art.js`.
+
+Each file in `js/` starts with a header comment describing what it does and how it connects to the others.
+
 ## Moving a project from WIP to completed
 
 Each project's `status` in `js/data/projects.js` decides which room it appears in:

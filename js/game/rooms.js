@@ -1,3 +1,15 @@
+// =============================================================================
+// rooms.js: the layout of the studio. Decides what goes where.
+//
+//   ROOM_INFO        names shown in the title bar for each room
+//   BENCH_SLOTS      where each WIP project sits on the workshop bench
+//   galleryFrames    computed: one gallery frame per completed project
+//   roomWidth(room)  how wide each room is (the gallery grows with projects)
+//   roomObjects      everything the visitor can walk up to and inspect
+//
+// How a room looks lives in js/game/art.js; what blocks walking lives in
+// js/game/collision.js. Project content lives in js/data/projects.js.
+// =============================================================================
 import {projects} from '../data/projects.js';
 
 export const ROOM_INFO={
@@ -16,9 +28,16 @@ export const WALK_MIN=518, WALK_MAX=646;
 // ---------------------------------------------------------------------------
 export const isCompleted=p=>p.status==='completed';
 
-// Workbench spots for works in progress. A new WIP project needs a spot here.
-//   art 'photo' -> framed displaySrc photo on the bench
-//   art 'plan'  -> the MCU cluster architecture blueprint
+// Workbench spots for works in progress. A new WIP project needs a spot here,
+// keyed by its project id.
+//   x, y, w, h  the display's box on the bench (world pixels; the bench top is ~484,
+//               so y + h should land near 472 to sit on it)
+//   art 'photo' framed displaySrc photo on the bench; label is its caption
+//   art 'plan'  the MCU cluster architecture blueprint
+//   markerY / labelY  height of the sparkle and the name label above it
+// Free bench space: the main bench runs x 300–2050 and is fairly full; the
+// capstone bench runs 2090–2450. To add a spot, widen ROOM_W.workshop below and
+// move props in drawWorkshop() (js/game/art.js) to make room.
 export const BENCH_SLOTS={
   'nfc-card':{x:690,y:346,w:160,h:126,art:'photo',label:'NFC CARD',markerY:338,labelY:288},
   'mcu-cluster':{x:1290,y:352,w:224,h:124,art:'plan',markerY:340,labelY:294},
@@ -43,6 +62,17 @@ const wipObjects=projects.filter(p=>!isCompleted(p)&&BENCH_SLOTS[p.id]).map(p=>{
 const galleryObjects=galleryFrames.map((f,i)=>({id:f.project.id,type:'project',x:f.cx,y:360,projectId:f.project.id,label:f.project.wallTitle ?? f.project.title.toUpperCase(),hint:`FINISHED / EXHIBIT ${String(i+1).padStart(2,'0')}`,markerY:206,labelY:460}));
 if(checkPhoto)galleryObjects.push({id:'smta-photo',type:'project',x:checkPhoto.x+checkPhoto.w/2,y:370,projectId:'team-fishies',label:'THE GIANT CHECK',hint:'ROUND 3 / FIRST PLACE',markerY:216,labelY:460});
 
+// Interactive things in each room. The engine shows a sparkle over each one
+// and reacts when the visitor walks up and presses E, or clicks it.
+//   id        unique within the room
+//   type      'door'     -> walks to `target` room
+//             'project'  -> opens the project dialog for `projectId`
+//             'about' | 'resume' | 'revisions' -> opens that dialog (js/ui/dialogs.js)
+//   x         horizontal centre in world pixels (interaction range is ±113px)
+//   y         kept for reference; interaction only uses x
+//   label     name shown above it when you're near
+//   hint      short description; not displayed yet, but handy as a note
+//   markerY / labelY  optional sparkle and label heights (defaults in engine.js)
 export const roomObjects={
   lobby:[
     {id:'lobby-to-workshop',type:'door',x:104,y:440,target:'workshop',label:'ENTER WORKSHOP',hint:'TO THE WORKBENCH'},

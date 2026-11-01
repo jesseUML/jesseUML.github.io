@@ -1,4 +1,6 @@
 // Handmade decorative SVG diagrams. These are illustrations, not real PCB artwork.
+// A project's dialog uses one of these only when it has no displaySrc photo;
+// its `art` field picks which (see `makers` at the bottom of this file).
 const frame = inner => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 170" role="img" aria-label="Stylized electronic hardware illustration"><defs><linearGradient id="board" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#2e6d67"/><stop offset="1" stop-color="#153c43"/></linearGradient><filter id="soft"><feGaussianBlur stdDeviation="4"/></filter></defs><ellipse cx="180" cy="144" rx="128" ry="12" fill="#050c18" opacity=".3" filter="url(#soft)"/>${inner}</svg>`;
 const rect = (x,y,w,h,fill,rx=3,stroke='#ccbb87',sw=1) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
 const pad = (x,y) => `<rect x="${x}" y="${y}" width="5" height="5" rx="1" fill="#d9ae70"/>`;

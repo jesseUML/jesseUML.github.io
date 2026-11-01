@@ -1,3 +1,16 @@
+// =============================================================================
+// main.js: wires the page together. Loaded by index.html.
+//
+//   Title screen    LED name, splash lines (SPLASHES), and the menu buttons
+//   Discovery       which exhibits a visitor has opened this visit (not saved),
+//                   with a toast for each new one and the lobby counter
+//   Studio          starts the game (engine.js) and the room buttons
+//   Lofi            the music toggles in the top bar and the menu
+//   Featured cards  built from projects that have a `featured` entry
+//
+// Any element with data-room="workshop" (etc.) jumps to that room, and any
+// element with data-open="about" | "resume" | "contact" opens that dialog.
+// =============================================================================
 import {StudioGame} from './game/engine.js';
 import {projects} from './data/projects.js';
 import {initDialogs} from './ui/dialogs.js';
@@ -12,8 +25,11 @@ const splash=$('splash');let splashIndex=Math.floor(Math.random()*SPLASHES.lengt
 const showSplash=()=>{splash.textContent=SPLASHES[splashIndex];splash.classList.remove('pop');void splash.offsetWidth;splash.classList.add('pop')};
 splash.addEventListener('click',()=>{splashIndex=(splashIndex+1)%SPLASHES.length;showSplash()});showSplash();
 
-// Discovery progress, with an achievement-style toast for each new exhibit
-const storageKey='jesse-studio-v2-seen';let visited=new Set();try{const val=JSON.parse(localStorage.getItem(storageKey)||'[]');if(Array.isArray(val))visited=new Set(val.filter(x=>projects.some(p=>p.id===x)))}catch{}
+// Discovery progress, with an achievement-style toast for each new exhibit.
+// Kept in memory only, so every visit starts at 0 and the tour is fresh again.
+const visited=new Set();
+// Older versions saved progress in localStorage; clear it for returning visitors.
+try{localStorage.removeItem('jesse-studio-v2-seen')}catch{}
 const showProgress=()=>{$('discovery-label').textContent=`${visited.size} / ${projects.length} EXHIBITS DISCOVERED`;studioState.found=visited.size;studioState.total=projects.length};showProgress();
 const toast=$('toast');let toastTimer=0;
 // The toast uses the popover top layer when available, so it shows above the
@@ -22,7 +38,7 @@ const canPopover=typeof toast.showPopover==='function';
 const openToast=()=>{if(canPopover){try{toast.hidePopover()}catch{}toast.showPopover()}else toast.classList.add('fallback-open')};
 const closeToast=()=>{if(canPopover){try{toast.hidePopover()}catch{}}else toast.classList.remove('fallback-open')};
 function notifyToast(title,body){$('toast-title').textContent=title;$('toast-body').textContent=body;openToast();toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(closeToast,4200)}
-const dialog=initDialogs(p=>{if(visited.has(p.id))return;visited.add(p.id);try{localStorage.setItem(storageKey,JSON.stringify([...visited]))}catch{}showProgress();
+const dialog=initDialogs(p=>{if(visited.has(p.id))return;visited.add(p.id);showProgress();
   if(visited.size===projects.length)notifyToast('FULL TOUR COMPLETE',`All ${projects.length} exhibits found. Thanks for visiting!`);
   else notifyToast('EXHIBIT DISCOVERED',`${p.title} · ${visited.size} / ${projects.length}`)});
 

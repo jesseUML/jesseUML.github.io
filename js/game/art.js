@@ -1,27 +1,68 @@
+// =============================================================================
+// art.js: everything the studio draws on the <canvas>.
+//
+// All artwork is code: rectangles, lines, and text drawn every frame by the
+// engine (js/game/engine.js). There are no sprite sheets. Coordinates are in
+// "world" pixels: each room is 675px tall and roomWidth(room) wide, and the
+// engine scrolls a 1200px-wide camera across it.
+//
+// Rough layout of a room (y values):
+//   0–60     ceiling strip       92–495  back wall (frames, shelves, signs)
+//   ~484     top of the benches  495–675 floor (the character walks ~518–646)
+//
+// Sections in this file:
+//   1. Drawing helpers        r(), box(), line(), txt(), radial(), seeded()
+//   2. Image assets           photos used on the walls and benches
+//   3. Room shell             wall, floor, rug, sign, lights, door, window
+//   4. Lobby props            seven-segment clock display, stock photos
+//   5. Workshop props         bench, scope, rework station, hotplate, ...
+//   6. Gallery props          display frames and pedestals
+//   7. Room compositions      drawGallery(), drawLobby(), drawWorkshop()
+//   8. Character              walk cycle, side / front / back views
+//   9. Interaction marker     the sparkle above things you can inspect
+//
+// Where things are placed is mostly decided in js/game/rooms.js; this file
+// only decides how they look.
+// =============================================================================
 import {roomWidth,BENCH_SLOTS,GALLERY,galleryFrames,checkPhoto,isCompleted} from './rooms.js';
 import {projects} from '../data/projects.js';
 // Walls and floors are painted wide enough for the widest room.
 const PAINT_W=Math.max(...['lobby','workshop','gallery'].map(roomWidth))+60;
 const TAU=Math.PI*2;
 export const C={ink:'#f3daba',gold:'#edb66e',mint:'#88d7bd',soft:'#a4bac2',dark:'#182334',board:'#285d55'};
+// ---- 1. Drawing helpers -----------------------------------------------------
+// r      filled rectangle, snapped to whole pixels for the crisp pixel-art look
+// line   straight stroke between two points
+// txt    text in the studio's monospace font (or 'serif' / 'sans')
+// box    filled rectangle with an outline
+// radial soft elliptical glow, used for lamp light and screen glow
+// seeded repeatable pseudo-random number for index i (0–1), so "random"
+//        details like lit windows look the same on every frame
 export function r(c,x,y,w,h,fill){c.fillStyle=fill;c.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
 export function line(c,x,y,X,Y,stroke,width=2){c.strokeStyle=stroke;c.lineWidth=width;c.beginPath();c.moveTo(x,y);c.lineTo(X,Y);c.stroke()}
 export function txt(c,text,x,y,size=14,color='#f7dcc0',align='left',font='mono'){c.textAlign=align;c.fillStyle=color;c.font=`${size}px ${font==='serif'?'Georgia,serif':font==='sans'?'system-ui,sans-serif':'Consolas,"Cascadia Mono",Menlo,"DejaVu Sans Mono",monospace'}`;c.fillText(text,x,y);c.textAlign='left'}
 export function box(c,x,y,w,h,fill,stroke='#000',sw=2){r(c,x,y,w,h,fill);if(stroke){c.strokeStyle=stroke;c.lineWidth=sw;c.strokeRect(x,y,w,h)}}
 function radial(c,x,y,rx,ry,color,alpha=1){c.save();c.translate(x,y);c.scale(rx,ry);const g=c.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');c.globalAlpha=alpha;c.fillStyle=g;c.fillRect(-1,-1,2,2);c.restore()}
 function seeded(i){let x=Math.sin(i*117.713+85.31)*12345.438;return x-Math.floor(x)}
+// ---- 2. Image assets --------------------------------------------------------
+// Fixed decor photos. Project photos are NOT listed here: they load from each
+// project's displaySrc in js/data/projects.js (see projectImage below).
 const DISPLAY_ASSETS={};
 for(const [key,src] of Object.entries({
   fishiesCheck:'./assets/images/projects/team-fishies-mentor-giant-check.webp',
+  fishiesFinal:'./assets/images/projects/team-fishies-final-time.webp',
   // CC0 stock photos from Wikimedia Commons; credits in README.
   stockRp2350:'./assets/images/decor/stock-rp2350-macro.webp',
   stockMemory:'./assets/images/decor/stock-memory-chips.webp'
 })){
   const img=new Image(); img.src=src; DISPLAY_ASSETS[key]=img;
 }
-// Project photos load from each project's displaySrc, so swapping a photo is a data change.
+// Project photos load from each project's displaySrc, so swapping a photo is a
+// data change. Images are created once per project and cached here.
 const projectImages={};
 function projectImage(p){if(!p.displaySrc)return null;if(!projectImages[p.id]){const img=new Image();img.src=p.displaySrc;projectImages[p.id]=img}return projectImages[p.id]}
+// Draws an image scaled to fit inside a box without stretching (letterboxed).
+// Returns false while the image is still loading or missing.
 function drawImageContain(c,img,x,y,w,h,bg='#131a22'){
   box(c,x,y,w,h,bg,'#5c5e63',2);
   if(!(img && img.complete && img.naturalWidth)) return false;
@@ -32,6 +73,9 @@ function drawImageContain(c,img,x,y,w,h,bg='#131a22'){
   c.drawImage(img,dx,dy,dw,dh);
   return true;
 }
+// ---- 3. Room shell ----------------------------------------------------------
+// Night-city window. The skyline layers scroll slower than the room
+// (parallax) based on the camera position, so the city feels far away.
 export function skyWindow(c,x,y,w,h,room,time,camera){
   box(c,x-13,y-13,w+26,h+26,'#201c2a','#493c40',7);
   c.save();c.beginPath();c.rect(x,y,w,h);c.clip();
@@ -49,11 +93,14 @@ export function skyWindow(c,x,y,w,h,room,time,camera){
   }
   r(c,x+w*.50,y,5,h,'#332d35');r(c,x,y+h*.57,w,6,'#332d35');r(c,x+8,y+7,w-16,2,'#a08b8f44');c.restore(); box(c,x-14,y+h,w+28,13,'#59434c','#201a2b',3);
 }
+// Ceiling strip, back wall gradient, and floor boards. style picks the colours.
 function wall(c,style){let a,b;if(style==='workshop'){a='#39313d';b='#242c37'}else if(style==='gallery'){a='#42414b';b='#333644'}else{a='#373643';b='#242432'}const g=c.createLinearGradient(0,110,0,540);g.addColorStop(0,a);g.addColorStop(1,b);r(c,0,0,PAINT_W,60,'#1c1c28');r(c,0,58,PAINT_W,2,'#33313f');r(c,0,92,PAINT_W,440,g);r(c,0,60,PAINT_W,34,'#292936');r(c,0,94,PAINT_W,5,'#866e67')}
 function floor(c,style){const g=c.createLinearGradient(0,495,0,675);g.addColorStop(0,style==='gallery'?'#5f4f4b':'#4e433f');g.addColorStop(1,style==='gallery'?'#312c34':'#292733');r(c,0,495,PAINT_W,180,g);for(let i=0;i<15;i++){const yy=506+i*12;line(c,0,yy,PAINT_W,yy,'#ffffff09',1)}for(let i=0;i<Math.ceil(PAINT_W/80);i++){const xx=5+i*80;line(c,xx,495,xx,675,'#201c24',2)}}
 function rug(c,x,y,w,h){c.save();c.globalAlpha=.95;box(c,x-w/2,y,w,h,'#2f3944','#d1ab6e',4);for(let i=1;i<5;i++)r(c,x-w/2+20*i,y+8,w-40*i,h-16,'rgba(226,195,140,.09)');c.restore()}
 function sign(c,x,y,w,h,t1,t2){box(c,x,y,w,h,'#1f2935','#d8b07b',5);txt(c,t1,x+w/2,y+31,18,'#f6dcc2','center');txt(c,t2,x+w/2,y+56,10,'#a8c8ba','center')}
 function ceilingLights(c,items,time){for(const [x,y,scale] of items){radial(c,x,y+40,85*scale,55*scale,'#f4bc74',.11);box(c,x-22*scale,y,44*scale,10,'#5e4b48','#a89588',2);line(c,x,y-30,x,y,'#978381',2)}}
+// Door between rooms; (x,y) is the bottom centre, standing on the floor line.
+// Where a door leads is set in rooms.js, not here.
 function door(c,x,y,label){
   const w=100,h=176,left=x-w/2,top=y-h;
   box(c,left,top,w,h,'#2b2a38','#aa8f75',6);
@@ -62,6 +109,7 @@ function door(c,x,y,label){
   r(c,x+24,top+h*.52,5,15,'#d9b17c');
   txt(c,label,x,y-12,13,'#f1d1aa','center');
 }
+// ---- 4. Lobby props ---------------------------------------------------------
 // Shared with main.js so the lobby display can show live discovery progress.
 export const studioState={found:0,total:0};
 const SEGMENTS={0:'abcdef',1:'bc',2:'abdeg',3:'abcdg',4:'bcfg',5:'acdfg',6:'acdefg',7:'abc',8:'abcdefg',9:'abcdfg',' ':''};
@@ -110,13 +158,64 @@ function lobbyDisplay(c,x,y,time){
   c.save();c.strokeStyle=pc;c.lineWidth=3;c.shadowColor=pc;c.shadowBlur=8;c.beginPath();c.moveTo(slashX+9,sy);c.lineTo(slashX,sy+sh);c.stroke();c.restore();
   segRow(c,slashX-8-foundText.length*(sw+sg)+sg,sy,sw,sh,st,sg,foundText,pc,pg);
 }
+// Draws an image cropped to fill a box (no letterboxing). focusY 0–1 picks
+// which part of a tall photo stays in frame (0 top, 0.5 centre); zoom > 1
+// crops in further, keeping the centre horizontally.
+function drawImageCover(c,img,x,y,w,h,focusY=.5,zoom=1){
+  if(!(img && img.complete && img.naturalWidth))return false;
+  const ir=img.naturalWidth/img.naturalHeight, br=w/h;
+  let sw=img.naturalWidth, sh=img.naturalHeight;
+  if(ir>br)sw=sh*br;else sh=sw/br;
+  sw/=zoom;sh/=zoom;
+  const sx=(img.naturalWidth-sw)/2, sy=(img.naturalHeight-sh)*focusY;
+  c.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+  return true;
+}
+// Pinned sticky note, slightly rotated. Two short lines of text.
+function stickyNote(c,x,y,color,lines,angle){
+  c.save();c.translate(x,y);c.rotate(angle);
+  r(c,-24,-20,50,44,'#00000033');
+  r(c,-26,-22,50,44,color); r(c,-26,-22,50,6,'#ffffff30');
+  lines.forEach((t,i)=>txt(c,t,-1,-2+i*11,7,'#3a3226','center'));
+  c.restore();
+}
+function pushPin(c,x,y,color){r(c,x-1,y+2,3,4,'#00000055');c.beginPath();c.arc(x,y,3.5,0,TAU);c.fillStyle=color;c.fill();r(c,x-1,y-2,2,2,'#ffffff88')}
+// Lobby corkboard: a polaroid of the team in front of their final time, plus
+// sticky notes with Jesse's own catchphrases. Decorative, not interactive.
+function corkboard(c,x,y){
+  const w=290,h=240;
+  box(c,x,y,w,h,'#7a5a44','#4a3529',6);
+  r(c,x+8,y+8,w-16,h-16,'#b08a5e');
+  for(let i=0;i<220;i++){const dx=seeded(i+901)*(w-20),dy=seeded(i+1301)*(h-20);r(c,x+10+dx,y+10+dy,2,2,i%3?'#9a7650':'#c49d6e')}
+  // Polaroid, tilted slightly. The photo box is 3:4 like the source image;
+  // a light zoom toward the top trims empty carpet so the team reads larger.
+  c.save();c.translate(x+84,y+120);c.rotate(-.04);
+  r(c,-64,-96,132,196,'#00000040');
+  box(c,-66,-98,132,196,'#f4efe4','#d8d0c0',1);
+  r(c,-60,-92,120,160,'#1a2230');
+  drawImageCover(c,DISPLAY_ASSETS.fishiesFinal,-60,-92,120,160,.2,1.2);
+  txt(c,'our final time',0,88,12,'#4a4038','center','serif');
+  c.restore();
+  pushPin(c,x+82,y+26,'#d9534f');
+  stickyNote(c,x+196,y+62,'#f0d98a',['JUST KEEP','SWITCHING'],.05);
+  stickyNote(c,x+252,y+84,'#a8e0c8',['MEASURE.','RETEST.'],-.06);
+  stickyNote(c,x+218,y+168,'#e8a4b0',['REV 2 >','REV 1'],.08);
+  pushPin(c,x+196,y+42,'#4f8fd9');pushPin(c,x+252,y+64,'#e0b23a');pushPin(c,x+218,y+148,'#59b36b');
+}
 function stockPhoto(c,img,x,y,w,h){
   box(c,x,y,w,h,'#131a22','#8d7b6a',2);
   if(img && img.complete && img.naturalWidth)c.drawImage(img,x+2,y+2,w-4,h-4);
 }
+// Potted plant; (x,y) is the bottom centre of the pot, s scales it.
 function plant(c,x,y,s=1){c.save();c.translate(x,y);c.scale(s,s);r(c,-24,-39,48,34,'#835c50');r(c,-18,-5,36,6,'#322b37');for(let i=0;i<7;i++){let ang=(i-3)*.32;const endx=Math.sin(ang)*53,endy=-65-Math.cos(ang)*35;line(c,0,-38,endx,endy,'#568373',5);c.fillStyle=i%2?'#54917b':'#385f59';c.beginPath();c.ellipse(endx,endy,14,28,ang,0,TAU);c.fill()}c.restore()}
+// ---- 5. Workshop props ------------------------------------------------------
+// Each prop takes its top-left corner (x,y). Most are fixed decoration; the
+// project displays on the bench are positioned by BENCH_SLOTS in rooms.js.
+// Wooden workbench; (x,y) is the top-left of the bench top.
 function bench(c,x,y,w){box(c,x,y,w,57,'#754f48','#d3a576',5);r(c,x+20,y+8,w-40,11,'#62443d');for(const xx of [x+24,x+w-42])r(c,xx,y+57,15,78,'#47383f');for(let i=0;i<3;i++)r(c,x+88+i*52,y+17,24,24,'#be8a63')}
 function pcb(c,x,y,w=90,h=46,col='#225d55'){box(c,x,y,w,h,col,'#c8a76d',3);for(let i=0;i<12;i++){const xx=x+8+seeded(i+35)*(w-18),yy=y+8+seeded(i+57)*(h-14);r(c,xx,yy,6,3,'#caaf69');if(i%3===0)r(c,xx+4,yy+2,3,11,'#9ab2a6')}box(c,x+w*.35,y+h*.26,w*.24,h*.42,'#172933','#c2c6ae',2)}
+// Oscilloscope in X–Y mode. Plotting sin(3t) against sin(2t) gives a
+// Lissajous figure; shifting the phase over time makes it slowly dance.
 function scope(c,x,y,time){box(c,x,y,172,117,'#222b31','#889393',7);box(c,x+12,y+13,122,84,'#0c262a','#51736c',3);r(c,x+17,y+18,112,74,'#0d2e32');for(let i=0;i<=6;i++){r(c,x+17+i*18,y+18,1,74,'#82e6c02d')}for(let i=0;i<=4;i++)r(c,x+17,y+18+i*18,112,1,'#82e6c02d');c.save();c.beginPath();c.rect(x+17,y+18,112,74);c.clip();c.beginPath();for(let i=0;i<=180;i++){const t=i/180*TAU;const ph=time*.72;const sx=x+73+52*Math.sin(3*t+ph);const sy=y+54+31*Math.sin(2*t+ph*.49);if(i===0)c.moveTo(sx,sy);else c.lineTo(sx,sy)}c.strokeStyle='#8effcf';c.lineWidth=2.6;c.shadowColor='#73ffc3';c.shadowBlur=9;c.stroke();c.restore();for(const yy of [y+28,y+53,y+78]){r(c,x+145,yy,14,12,'#748486');r(c,x+148,yy+2,8,7,'#33383c')}r(c,x+15,y+103,18,4,'#b2d7bc');txt(c,'X-Y',x+89,y+107,10,'#b1f7de','center')}
 function fg(c,x,y){box(c,x,y,139,69,'#42444a','#92938c',5);box(c,x+11,y+12,65,38,'#1b3332','#7d988c',3);txt(c,'1.0kHz',x+19,y+28,9,'#a1eec2');txt(c,'SINE 1:1.5',x+16,y+43,8,'#91c8bc');for(let k=0;k<3;k++){r(c,x+92+k*13,y+24,9,11,'#9d9b90');r(c,x+92+k*13,y+40,9,5,'#333c40')}txt(c,'FG',x+13,y+62,8,'#f0b981')}
 function dualStation(c,x,y){
@@ -135,14 +234,23 @@ function dualStation(c,x,y){
   c.beginPath();c.moveTo(-48,64);c.bezierCurveTo(-48,126,-23,147,18,146);c.lineTo(66,138);c.stroke();
   box(c,-59,42,18,16,'#1b2129','#3e4651',2);
   r(c,-53,57,6,6,'#1b2129');
-  // Left hot-air handpiece, mostly hidden in its side dock.
-  box(c,-1,92,58,33,'#252b34','#7b8285',4);
-  box(c,7,99,23,18,'#111822','#8e9699',2);
-  c.save();c.translate(15,95);c.rotate(-0.1);
-  box(c,-5,-52,14,46,'#303741','#778286',2);
-  for(let j=0;j<4;j++)r(c,-3,-46+j*9,10,3,'#5d646b');
-  box(c,1,-67,8,15,'#989d9e','#c9c5b8',2); r(c,3,-76,4,10,'#d7d2c4');
-  c.restore();
+  // Hot-air handpiece parked nozzle-down in a holder tube. The nozzle and
+  // barrel sit inside the tube; the grip sticks out the top and the hose
+  // leaves the back of the handle, loops down beside the holder, and runs
+  // along the bench to the AIR socket. Order: tube back, handpiece, tube front.
+  box(c,-2,136,60,10,'#252b34','#7b8285',2);
+  r(c,23,118,10,18,'#6d7475');r(c,25,118,3,18,'#8f9696');
+  box(c,12,66,32,54,'#11161d','#8e9699',2);
+  box(c,22,64,12,40,'#989d9e','#c9c5b8',2);
+  box(c,20,14,16,58,'#303741','#778286',2);
+  for(let j=0;j<4;j++)r(c,22,20+j*8,12,3,'#5d646b');
+  r(c,24,6,8,9,'#1b2129');
+  box(c,12,78,32,42,'#2a313b','#8e9699',2); r(c,15,81,26,2,'#4a535f');
+  box(c,8,64,40,14,'#353d48','#8e9699',2); r(c,11,67,34,2,'#5a6470');
+  c.strokeStyle='#131b26';c.lineWidth=4.5;c.lineCap='round';
+  c.beginPath();c.moveTo(28,6);c.bezierCurveTo(28,-10,0,-8,1,30);c.bezierCurveTo(2,120,4,152,52,151);c.bezierCurveTo(76,151,92,148,100,143);c.stroke();
+  c.strokeStyle='#2d3948';c.lineWidth=1.4;
+  c.beginPath();c.moveTo(30,6);c.bezierCurveTo(30,-7,3,-5,4,30);c.bezierCurveTo(5,118,7,149,52,148);c.bezierCurveTo(76,148,92,145,100,140);c.stroke();
 
   // Main station body seen almost straight-on.
   c.fillStyle='#0c8a82';c.strokeStyle='#12353b';c.lineWidth=5;
@@ -166,35 +274,51 @@ function dualStation(c,x,y){
   txt(c,'AIR',94,138,7,'#d6d4cb'); txt(c,'IRON',145,138,7,'#d6d4cb');
   r(c,95,139,10,8,'#10141c'); r(c,148,139,10,8,'#10141c');
 
-  // Visible cables from the front-panel sockets to each docked handpiece.
-  c.strokeStyle='#131b26'; c.lineWidth=4.5; c.lineCap='round';
-  c.beginPath();
-  c.moveTo(100,143); c.bezierCurveTo(83,151,59,150,43,143); c.bezierCurveTo(27,136,21,126,19,116);
-  c.stroke();
-  c.beginPath();
-  c.moveTo(153,143); c.bezierCurveTo(178,150,205,147,226,138); c.bezierCurveTo(234,135,237,128,239,111);
-  c.stroke();
-  // subtle highlight so the cables read better against the warm bench light
-  c.strokeStyle='#2d3948'; c.lineWidth=1.4;
-  c.beginPath();
-  c.moveTo(100,143); c.bezierCurveTo(84,149,61,148,45,142); c.bezierCurveTo(31,136,25,127,23,118);
-  c.stroke();
-  c.beginPath();
-  c.moveTo(153,143); c.bezierCurveTo(177,148,202,146,222,138); c.bezierCurveTo(230,135,233,127,235,113);
-  c.stroke();
-
-  // Right iron stand, mostly front-on; only the handle and tip peek out.
-  box(c,204,103,62,35,'#2a3038','#8b8f8f',4);
-  box(c,230,95,22,16,'#141b24','#9ca3a3',3);
-  c.save();c.translate(239,95);c.rotate(.05);
-  box(c,-5,-40,10,29,'#17a094','#1b6967',2);
-  box(c,-6,-54,12,15,'#90999d','#c8c5b7',2); r(c,-2,-64,4,11,'#ddd7c9');
+  // Soldering iron resting tip-down in a coil holder, tilted away from the
+  // station. The cable leaves the back of the handle and loops to the socket.
+  const ironAngle=-1.13, coilX=218, coilY=134;
+  const gx=coilX+95*Math.cos(ironAngle), gy=coilY+95*Math.sin(ironAngle);
+  c.strokeStyle='#131b26';c.lineWidth=4.5;c.lineCap='round';
+  c.beginPath();c.moveTo(gx,gy);c.bezierCurveTo(gx+20,gy+10,gx+20,gy+72,gx-8,gy+100);c.bezierCurveTo(222,154,180,152,153,143);c.stroke();
+  c.strokeStyle='#2d3948';c.lineWidth=1.4;
+  c.beginPath();c.moveTo(gx+1,gy+3);c.bezierCurveTo(gx+17,gy+12,gx+17,gy+70,gx-9,gy+97);c.bezierCurveTo(222,151,180,149,153,140);c.stroke();
+  box(c,198,134,74,12,'#2a3038','#8b8f8f',2);
+  brassWool(c,240,122,28);
+  c.save();c.translate(coilX,coilY);c.rotate(ironAngle);
+  r(c,-2,-4,10,8,'#5d6566');
+  for(let i=0;i<8;i++)r(c,8+i*6,-9,2,18,'#5f6667');
+  r(c,4,-1.5,14,3,'#ddd7c9');
+  r(c,18,-3,36,6,'#90999d');
+  box(c,54,-6,32,12,'#17a094','#1b6967',2);
+  for(let k=0;k<3;k++)r(c,60+k*8,-6,2,12,'#1b6967');
+  r(c,86,-4,9,8,'#1b6967');
+  for(let i=0;i<8;i++)r(c,11+i*6,-9,2,18,'#a8b0b0');
   c.restore();
-
-  // Brass wool pot near the iron stand.
-  box(c,214,131,38,14,'#6c6f74','#b0b5b1',3);
-  for(let j=0;j<6;j++)line(c,220+j*5,134,222+j*4,142,'#c99f59',2);
   c.restore();
+}
+// Brass tip-cleaning wool: a metal cup with a tangled mound of curly brass
+// wire bulging over the rim.
+function brassWool(c,x,y,w){
+  const mid=x+w/2;
+  c.save();
+  c.fillStyle='#5e4720';c.beginPath();c.ellipse(mid,y+1,w/2+2,13,0,Math.PI,0);c.fill();
+  const golds=['#c99f59','#e8c574','#9c7a3c','#d8ad5a','#b58a45'];
+  c.lineWidth=1.4;
+  for(let i=0;i<34;i++){
+    const fx=seeded(i+211), fy=seeded(i+377), fr=seeded(i+523);
+    const cx=x+fx*w;
+    const dome=Math.max(0,1-Math.pow(Math.abs(cx-mid)/(w/2+2),2));
+    const cy=y+2-fy*13*dome;
+    c.strokeStyle=golds[i%5];
+    c.beginPath();c.arc(cx,cy,2+fr*3.2,fr*TAU,fr*TAU+4.6);c.stroke();
+  }
+  // A few stray strands poking out past the mound, plus glints.
+  c.strokeStyle='#d8ad5a';c.lineWidth=1;
+  for(const [sx,sy,ex,ey] of [[x+3,y-2,x-2,y-6],[x+w-4,y-3,x+w+2,y-8],[mid,y-11,mid+3,y-16]]){c.beginPath();c.moveTo(sx,sy);c.quadraticCurveTo((sx+ex)/2+2,(sy+ey)/2-2,ex,ey);c.stroke()}
+  for(let i=0;i<8;i++){r(c,x+3+seeded(i+611)*(w-6),y-1-seeded(i+733)*10,1,1,'#fbe6ad')}
+  c.restore();
+  box(c,x,y,w,12,'#6c6f74','#b0b5b1',2);
+  r(c,x+2,y+2,w-4,2,'#8c9196');
 }
 function hotPlate(c,x,y){
   radial(c,x+76,y+38,150,85,'#ef9b65',.12);
@@ -204,15 +328,36 @@ function hotPlate(c,x,y){
   box(c,x+15,y+42,64,20,'#172e36','#81a19a',2); txt(c,'165°C',x+20,y+56,12,'#fdc58d');
   for(let k=0;k<3;k++)r(c,x+92+k*12,y+46,8,9,'#aab1aa'); txt(c,'HOTPLATE',x+119,y+41,7,'#e8c48e','center');
 }
+// Framed rework note on the workshop wall. It shows Jesse's real decoupling
+// mistake from an early business card: two capacitors in parallel, wired in
+// SERIES between VCC and the load. Capacitors block DC, so the load never
+// powered up. The fix (caps from VCC to GND, beside the load) is printed
+// below it. The full-size version of this diagram is REWORK_DIAGRAM in
+// js/ui/dialogs.js; keep the two in sync if the lesson changes.
 function framedLesson(c,x,y){
-  c.save();c.translate(x,y);c.scale(.86,1);x=0;y=0;
-  box(c,x,y,122,150,'#2d333e','#cfb089',6); box(c,x+10,y+10,102,130,'#202836','#6d655f',3);
-  r(c,x+20,y+19,82,5,'#314759'); txt(c,'REWORK NOTE',x+61,y+21,8,'#f0d7ad','center');
-  // Mini capacitor sketch inside the frame
-  line(c,x+25,y+57,x+38,y+57,'#b7e0cf',2); line(c,x+46,y+57,x+58,y+57,'#b7e0cf',2); line(c,x+66,y+57,x+78,y+57,'#b7e0cf',2); line(c,x+86,y+57,x+99,y+57,'#b7e0cf',2);
-  for(const px of [38,58,78]){ line(c,x+px,y+46,x+px,y+68,'#b7e0cf',2); line(c,x+px+5,y+46,x+px+5,y+68,'#b7e0cf',2);} 
-  box(c,x+26,y+84,70,25,'#235b50','#aaccaa',2); r(c,x+31,y+89,18,11,'#182935'); r(c,x+57,y+89,10,6,'#b2aea3'); r(c,x+72,y+89,10,6,'#b2aea3');
-  txt(c,'MEASURE',x+61,y+121,10,'#f0c58f','center'); txt(c,'REWORK / RETEST',x+61,y+134,8,'#a8d9cc','center');
+  c.save();c.translate(x,y);c.scale(.86,1);
+  box(c,0,0,122,150,'#2d333e','#cfb089',6); box(c,10,10,102,130,'#202836','#6d655f',3);
+  r(c,20,19,82,5,'#314759'); txt(c,'REWORK NOTE',61,21,8,'#f0d7ad','center');
+  const wire='#b7e0cf';
+  // VCC -> node A, which splits into the two parallel capacitor branches.
+  txt(c,'V',16,59,7,'#edc691');
+  line(c,22,56,30,56,wire,1.5); line(c,30,46,30,66,wire,1.5);
+  for(const by of [46,66]){
+    line(c,30,by,38,by,wire,1.5);
+    line(c,38,by-6,38,by+6,wire,2); line(c,42,by-6,42,by+6,wire,2);
+    line(c,42,by,50,by,wire,1.5);
+  }
+  // Node B rejoins the branches and continues in series into the load.
+  line(c,50,46,50,66,wire,1.5); line(c,50,56,64,56,wire,1.5);
+  box(c,64,49,24,14,'#383542','#99765e',1); txt(c,'LOAD',76,59,6,'#f0c58f','center');
+  line(c,88,56,98,56,wire,1.5); line(c,98,56,98,66,wire,1.5);
+  line(c,93,66,103,66,wire,1.5); line(c,95,69,101,69,wire,1.5); line(c,97,72,99,72,wire,1.5);
+  // Red X through the series path marks the mistake.
+  line(c,53,51,61,61,'#ff7a6b',2); line(c,61,51,53,61,'#ff7a6b',2);
+  txt(c,'CAPS IN SERIES',61,88,8,'#ff9a8c','center');
+  txt(c,'NO DC TO LOAD',61,99,7,'#c99a92','center');
+  txt(c,'FIX: CAPS TO GND',61,117,8,'#a8d9cc','center');
+  txt(c,'MEASURE · RETEST',61,132,7,'#f0c58f','center');
   c.restore();
 }
 function architecturePlan(c,x,y){
@@ -222,8 +367,13 @@ function architecturePlan(c,x,y){
   txt(c,'WORKER CARDS ×4 MCU EACH',x+112,y+123,7,'#eac794','center'); c.restore();
 }
 function laptop(c,x,y){radial(c,x+75,y+50,155,100,'#f2a263',.16);box(c,x,y,148,103,'#20232d','#867b77',6);box(c,x+9,y+8,130,84,'#4a3132','#b27d60',2);r(c,x+15,y+17,118,12,'#784c42');txt(c,'main.c',x+25,y+27,10,'#ffd09a');for(let i=0;i<5;i++)r(c,x+25,y+38+i*10,75-(i%3)*11,3,['#e9a86a','#99c5b8','#d59b78'][i%3]);r(c,x-16,y+103,178,13,'#63616b');r(c,x+40,y+108,65,2,'#b8a3a0')}
+// ---- 6. Gallery props (also used on the bench) ------------------------------
+// Picture frame with a caption strip. img may be null or still loading.
 function displayFrame(c,x,y,w,h,img,title){ box(c,x,y,w,h,'#272e39','#b99d7b',7); const innerY=y+14, innerH=h-62; const shown=drawImageContain(c,img,x+14,innerY,w-28,innerH,'#151c24'); if(!shown&&!img)txt(c,'PHOTO COMING SOON',x+w/2,innerY+innerH/2+4,11,'#9fb6b0','center'); r(c,x+12,y+h-43,w-24,30,'#302a33'); txt(c,title,x+w/2,y+h-24,12,'#f0d3ad','center'); }
 function pedestal(c,x,y,w=200){box(c,x-w/2,y,w,34,'#767078','#bcb0a0',5);box(c,x-w/2+26,y+35,w-52,66,'#343642','#77717a',3);box(c,x-w/2+37,y+102,w-74,9,'#1b2636','#90826d',2)}
+// ---- 7. Room compositions ---------------------------------------------------
+// Each draw<Room>() paints the whole room back-to-front: wall, floor, then
+// props. Later calls draw on top of earlier ones.
 // Gallery layout comes from rooms.js: one frame and pedestal per completed project.
 function drawGallery(c,time){
   const W=roomWidth('gallery');
@@ -244,7 +394,10 @@ function drawGallery(c,time){
   if(checkPhoto){const cx=checkPhoto.x+checkPhoto.w/2;r(c,cx-50,206,100,7,'#9b816b');radial(c,cx,300,140,140,'#ffbf79',.09);displayFrame(c,checkPhoto.x,225,checkPhoto.w,checkPhoto.h,DISPLAY_ASSETS.fishiesCheck,'ROUND 3 · 1ST PLACE')}
   door(c,111,494,'LOBBY'); plant(c,310,543,.8); plant(c,W-60,552,.75);
 }
-function drawLobby(c,time,camera){ wall(c,'lobby'); floor(c,'lobby'); rug(c,847,559,360,90); skyWindow(c,515,105,420,263,'lobby',time,camera); ceilingLights(c,[[345,110,.65],[1150,122,.8],[1445,105,.6]],time); lobbyDisplay(c,985,190,time); box(c,520,70,405,42,'#292a37','#c6a67f',4); txt(c,"JESSE'S STUDIO",721,98,27,'#f4d7ac','center'); box(c,562,410,198,80,'#363b46','#d2b48a',5); txt(c,'HELLO THERE!',661,440,17,'#efd7b4','center'); txt(c,'PRESS E TO SAY HI',661,463,10,'#b8cbc5','center'); bench(c,1040,467,293); box(c,1117,425,115,40,'#dfc08d','#51404a',4); txt(c,'RESUME',1176,451,19,'#2c3442','center'); r(c,1079,484,218,55,'#382f36'); r(c,1114,502,149,8,'#d6a46f'); box(c,345,452,150,57,'#866762','#d7ae9c',5); box(c,354,461,64,39,'#9b796f','#bfa59a',2); box(c,422,461,64,39,'#947168','#bfa59a',2); box(c,335,494,170,41,'#7c5752','#ddad85',5); box(c,349,499,142,27,'#9d7568','#c9997d',3); line(c,420,500,420,525,'#79564f',2); r(c,327,478,22,57,'#714e4b'); r(c,491,478,22,57,'#714e4b'); r(c,362,534,12,12,'#443740'); r(c,466,534,12,12,'#443740'); box(c,1358,270,208,169,'#222f37','#b39b82',6); stockPhoto(c,DISPLAY_ASSETS.stockRp2350,1372,286,86,64); stockPhoto(c,DISPLAY_ASSETS.stockMemory,1466,286,86,64); txt(c,'THIS WAY',1462,382,12,'#a6c8bb','center'); txt(c,'THE GALLERY  →',1462,410,15,'#dca873','center'); door(c,104,494,'WORKSHOP'); door(c,1640,494,'GALLERY'); plant(c,942,546,.9); plant(c,1289,548,.75); plant(c,270,548,.73); }
+// Lobby: workshop door, corkboard over the sofa, window and studio sign,
+// "Hello there" (about), the clock display, résumé desk, gallery sign, and
+// gallery door.
+function drawLobby(c,time,camera){ wall(c,'lobby'); floor(c,'lobby'); rug(c,847,559,360,90); skyWindow(c,515,105,420,263,'lobby',time,camera); ceilingLights(c,[[345,110,.65],[1150,122,.8],[1445,105,.6]],time); corkboard(c,200,150); lobbyDisplay(c,985,190,time); box(c,520,70,405,42,'#292a37','#c6a67f',4); txt(c,"JESSE'S STUDIO",721,98,27,'#f4d7ac','center'); box(c,562,410,198,80,'#363b46','#d2b48a',5); txt(c,'HELLO THERE!',661,440,17,'#efd7b4','center'); txt(c,'PRESS E TO SAY HI',661,463,10,'#b8cbc5','center'); bench(c,1040,467,293); box(c,1117,425,115,40,'#dfc08d','#51404a',4); txt(c,'RESUME',1176,451,19,'#2c3442','center'); r(c,1079,484,218,55,'#382f36'); r(c,1114,502,149,8,'#d6a46f'); box(c,345,452,150,57,'#866762','#d7ae9c',5); box(c,354,461,64,39,'#9b796f','#bfa59a',2); box(c,422,461,64,39,'#947168','#bfa59a',2); box(c,335,494,170,41,'#7c5752','#ddad85',5); box(c,349,499,142,27,'#9d7568','#c9997d',3); line(c,420,500,420,525,'#79564f',2); r(c,327,478,22,57,'#714e4b'); r(c,491,478,22,57,'#714e4b'); r(c,362,534,12,12,'#443740'); r(c,466,534,12,12,'#443740'); box(c,1358,270,208,169,'#222f37','#b39b82',6); stockPhoto(c,DISPLAY_ASSETS.stockRp2350,1372,286,86,64); stockPhoto(c,DISPLAY_ASSETS.stockMemory,1466,286,86,64); txt(c,'THIS WAY',1462,382,12,'#a6c8bb','center'); txt(c,'THE GALLERY  →',1462,410,15,'#dca873','center'); door(c,104,494,'WORKSHOP'); door(c,1640,494,'GALLERY'); plant(c,942,546,.9); plant(c,1289,548,.75); plant(c,270,548,.73); }
 function shelves(c,x0,x1){ for(const yy of [218,306]){r(c,x0,yy,x1-x0,10,'#795b4d');r(c,x0,yy+11,x1-x0,4,'#302e38')} const top=Math.floor((x1-x0-30)/60); for(let i=0;i<top;i++){const xx=x0+15+i*60;const color=['#758d87','#5f7977','#956f62','#455965'][i%4];box(c,xx,183+(i%3)*3,44,34,color,'#2d383c',3);r(c,xx+8,201,28,3,'#e8c89b')} const low=Math.floor((x1-x0-30)/126); for(let i=0;i<low;i++){const xx=x0+30+i*126;box(c,xx,265,84,41,i%2?'#3c5e60':'#4e5756','#a18e7e',3);r(c,xx+15,278,54,6,'#aa9b84')} }
 // The STM32 LED business card propped on a stand and tethered to the laptop,
 // running an animation on its 8×8 matrix as if mid-firmware-flash.
@@ -266,6 +419,10 @@ function cardOnStand(c,x,y,time){
     r(c,x+48+col*5.4,y+17+row*4.9,3,3,on?'#ffd08a':'#2a2622');
   }
 }
+// Workshop, left to right: door, scope and function generator, project spots
+// from BENCH_SLOTS, laptop and STM32 card, rework station, hotplate, then the
+// separate capstone bench and the rework-lesson frame. The x positions here
+// must leave room for the BENCH_SLOTS boxes in rooms.js.
 function drawWorkshop(c,time,camera){
   const W=roomWidth('workshop');
   wall(c,'workshop'); floor(c,'workshop');
@@ -280,7 +437,7 @@ function drawWorkshop(c,time,camera){
   laptop(c,920,359);
   c.strokeStyle='#131b26';c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(1074,468);c.bezierCurveTo(1090,480,1096,470,1104,452);c.stroke();
   cardOnStand(c,1104,416,time);
-  dualStation(c,1600,331);
+  dualStation(c,1600,338);
   hotPlate(c,1890,406);
   // Capstone gets its own bench section with a banner and an ESP32 remote prop.
   bench(c,2090,486,360); r(c,2112,496,316,17,'#22385a'); r(c,2112,511,316,6,'#5a7aa8');
@@ -317,7 +474,13 @@ function remoteProp(c,x,y){
   for(const [bx,by,col] of [[x+58,y+40,'#e65b4f'],[x+66,y+52,'#6ce2c4']]){c.beginPath();c.arc(bx,by,5,0,TAU);c.fillStyle=col;c.fill()}
   r(c,x+56,y+12,16,3,'#6ce2c4');
 }
+// Entry point the engine calls every frame. time is seconds (0 when the
+// visitor prefers reduced motion); camera is the scroll position for parallax.
 export function drawRoom(c,room,time,camera){ if(room==='gallery') drawGallery(c,time); else if(room==='workshop') drawWorkshop(c,time,camera); else drawLobby(c,time,camera); }
+// ---- 8. Character -----------------------------------------------------------
+// The walk cycle has 8 poses. foot is how far the lead foot sits from the hip
+// (+ forward, − back) and lift is how high it is off the floor. The trailing
+// leg uses the pose 4 steps later, so the legs are always opposite.
 const WALK_POSES=[
   {foot: 22,lift:0}, {foot: 7,lift:0}, {foot:-8,lift:0}, {foot:-22,lift:0},
   {foot:-18,lift:7}, {foot:-5,lift:14}, {foot:11,lift:13}, {foot:22,lift:5}
@@ -403,6 +566,10 @@ function drawFrontBack(c,b,index,swing,time,back){
   }
   c.restore();
 }
+// Draws Jesse at (x, feet). stepPhase (0–2π) picks the walk pose and comes
+// from distance walked, so feet never slide. blend eases between standing
+// (0) and walking (1). direction is 'side', 'front' (toward the camera), or
+// 'back' (away); facing is 1 for right and -1 for left in side view.
 export function drawCharacter(c,x,feet,time,walking,facing,stepPhase=0,blend=walking?1:0,direction='side'){
   const b=Math.max(0,Math.min(1,blend));
   const index=Math.floor((((stepPhase%(Math.PI*2))+(Math.PI*2))%(Math.PI*2))/(Math.PI*2)*8)%8;
@@ -444,4 +611,6 @@ export function drawCharacter(c,x,feet,time,walking,facing,stepPhase=0,blend=wal
   r(c,10,-57,9,12,'#f0dec0');r(c,12,-54,5,5,'#79bba9');
   c.restore();
 }
+// ---- 9. Interaction marker --------------------------------------------------
+// Bobbing sparkle above anything the visitor can inspect; brighter when near.
 export function drawMarker(c,x,y,time,near=false){const v=Math.sin(time*3)*4;c.save();c.shadowColor='#ffe1a8';c.shadowBlur=near?24:12;const color=near?'#ffe5b1':'#eec692';r(c,x-4,y-16+v,8,8,color);r(c,x-2,y-22+v,4,20,color);r(c,x-10,y-14+v,20,4,color);c.restore()}

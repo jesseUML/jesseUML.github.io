@@ -1,8 +1,27 @@
+// =============================================================================
+// engine.js: the walkable studio's game loop.
+//
+// Every animation frame:
+//   1. tick()  reads the held keys, moves the character (with collision),
+//              advances the walk animation, and eases the camera after them.
+//   2. frame() redraws the current room (art.js), the sparkle markers and
+//              labels, and the character on top.
+//
+// The engine doesn't know about specific projects. It reads the current
+// room's objects from rooms.js and, when the visitor presses E or clicks one,
+// calls inspect(object) (opens a dialog, see main.js) or switches rooms for
+// doors. Object types: 'door', 'project', 'about', 'resume', 'revisions'.
+// =============================================================================
 import {ROOM_INFO,roomObjects,roomWidth,WALK_MIN,WALK_MAX} from './rooms.js';
-import {drawRoom,drawCharacter,drawMarker,txt,box,r} from './art.js';
+import {drawRoom,drawCharacter,drawMarker,txt,box} from './art.js';
 import {moveWithCollision} from './collision.js';
+// Size of the camera view in world pixels. The canvas is scaled to fit the page.
 const W=1200,H=675;
 export class StudioGame{
+  // canvas: the <canvas> to draw on.
+  // inspect(obj): called when the visitor interacts with a non-door object.
+  // notify(text): shows a short caption in the corner of the game.
+  // discover():   kept for compatibility; progress is tracked in main.js.
   constructor({canvas,notify,inspect,discover}){
     this.canvas=canvas;this.c=canvas.getContext('2d',{alpha:false});this.notify=notify;this.inspect=inspect;this.discover=discover;
     this.room='lobby';this.x=800;this.y=624;this.camera=250;this.facing=1;this.walking=false;this.stepPhase=0;this.walkBlend=0;this.walkDirection='side';this.keys=new Set();this.pointerX=-1;this.pointerY=-1;
@@ -10,7 +29,12 @@ export class StudioGame{
     this.last=0;this.time=0;this.bind();this.changeUi();requestAnimationFrame(t=>this.frame(t));
   }
   objects(){return roomObjects[this.room]}
+  // Closest interactive object within 113px horizontally, or null. Only x
+  // matters, so you can be anywhere front-to-back on the floor.
   nearestObject(){let best=null,dist=Infinity;for(const item of this.objects()){const d=Math.abs(this.x-item.x);if(d<dist){dist=d;best=item}}return dist<113?best:null}
+  // Keyboard, mouse, and touch input. Held movement keys live in this.keys
+  // and are read every tick. Keys are ignored while a dialog is open or when a
+  // button or link has focus, so the page stays usable with a keyboard.
   bind(){const codes={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyW:'up',ArrowUp:'up',KeyS:'down',ArrowDown:'down'};
     window.addEventListener('keydown',e=>{
       if(document.querySelector('dialog[open]'))return;
@@ -31,13 +55,19 @@ export class StudioGame{
     document.getElementById('touch-interact').addEventListener('click',()=>this.interactNearest());
     document.addEventListener('visibilitychange',()=>{this.paused=document.hidden;this.last=0});
   }
+  // Mouse hit-test: a generous vertical band around each object, so clicking
+  // anywhere on a frame or its pedestal counts.
   pointHit(item){const dx=Math.abs(this.pointerX-item.x),dy=this.pointerY;const radius=item.type==='project'?185:item.type==='door'?115:135;return dx<radius && dy>195 && dy<545}
   pointed(){if(this.pointerX<0)return null;const objects=this.objects().filter(item=>this.pointHit(item));if(!objects.length)return null;return objects.sort((a,b)=>Math.abs(this.pointerX-a.x)-Math.abs(this.pointerX-b.x))[0]}
   interactNearest(){if(document.querySelector('dialog[open]'))return;const obj=this.nearestObject();if(obj)this.activate(obj)}
   activate(item){if(item.type==='door')this.toRoom(item.target,item.id);else this.inspect(item)}
+  // Switch rooms. source is the door id used, so returning to the lobby puts
+  // you beside the door you came through.
   toRoom(room,source){if(!ROOM_INFO[room])return;this.room=room;this.x=source?.includes('to-lobby')?(source.startsWith('gallery')?250:240):room==='gallery'?300:room==='workshop'?310:800;
     this.y=624;this.camera=Math.max(0,Math.min(roomWidth(this.room)-W,this.x-W*.5));this.pointerX=-1;this.nearest=null;this.changeUi();this.notify(`WELCOME TO ${ROOM_INFO[room].name}`);}
   changeUi(){const ri=ROOM_INFO[this.room];document.getElementById('room-label').textContent=`${ri.number} / ${ri.name}`;document.getElementById('room-subtitle').textContent=ri.subtitle;for(const button of document.querySelectorAll('.room-tabs [data-room]'))button.classList.toggle('active',button.dataset.room===this.room)}
+  // One step of movement. dt is seconds since the last frame. Depth (y) moves
+  // at about half speed so walking toward or away from the wall feels right.
   tick(dt){if(this.paused)return;const dx=(Number(this.keys.has('right'))-Number(this.keys.has('left')));const dy=(Number(this.keys.has('down'))-Number(this.keys.has('up')));
     const speed=this.reduced?190:210;const length=Math.hypot(dx,dy)||1;
     const wantedX=Math.max(44,Math.min(roomWidth(this.room)-44,this.x+dx/length*speed*dt));
@@ -57,8 +87,12 @@ export class StudioGame{
     const hint=document.getElementById('interact-hint');hint.hidden=!this.nearest; if(this.nearest)hint.innerHTML=`PRESS <kbd>E</kbd> — ${this.nearest.label}`;
     const over=this.pointed();this.canvas.style.cursor=over?'pointer':'default';
   }
+  // Called by requestAnimationFrame. Draws in world coordinates by shifting
+  // the canvas left by the camera position.
   frame(ms){const dt=this.last?Math.min(.05,(ms-this.last)/1000):0;this.last=ms;this.time=ms*.001;this.tick(dt);
     const c=this.c;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W,H);
+    // Sparkle and label heights. An object's own markerY / labelY (set in
+    // rooms.js) wins; otherwise these per-type defaults are used.
     const markerFor=obj=>obj.markerY ?? (obj.type==='door'?298:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='resume'?412:obj.type==='revisions'?355:300);
     const labelFor=obj=>obj.labelY ?? (obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?240:obj.type==='resume'?363:obj.type==='revisions'?310:258);
     c.save();c.translate(-Math.round(this.camera),0);drawRoom(c,this.room,this.reduced?0:this.time,this.camera);

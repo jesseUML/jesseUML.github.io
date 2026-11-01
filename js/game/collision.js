@@ -1,6 +1,12 @@
-// Collidable furniture footprints in world coordinates. A character's position
-// represents their shoes/feet, not their whole sprite; this preserves sensible
-// depth-based walking in front of work surfaces and display plinths.
+// =============================================================================
+// collision.js: furniture the character can't walk through.
+//
+// Each collider is a rectangle on the floor {x, y, w, h} in world pixels. The
+// character's position is their feet, so only floor footprints matter: you
+// can walk in front of a bench (higher y) but not through its legs.
+// If you add furniture in art.js that should block walking, add its floor
+// footprint here. Walk depth is limited to y 518–646 (WALK_MIN/MAX in rooms.js).
+// =============================================================================
 import {galleryFrames,roomWidth} from './rooms.js';
 export const COLLIDERS = Object.freeze({
   lobby: [

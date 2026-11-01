@@ -1,11 +1,39 @@
-// Content for the finished project gallery and the active workbench.
+// =============================================================================
+// projects.js: every project in the portfolio. This is the file to edit.
 //
 // status decides where a project appears:
 //   'wip'       -> on its workbench spot in the workshop (spots: BENCH_SLOTS in js/game/rooms.js)
 //   'completed' -> framed in the gallery, in the order listed here
-// To finish a project: change status to 'completed', update `code` (the dialog
-// label, e.g. 'EXHIBIT 03 / REV 1'), and point displaySrc at your best photo.
-// wallTitle (optional) is the short name on its gallery frame.
+//
+// Fields (only id, title, status, summary are required):
+//   id           unique, lowercase-with-dashes. Used by rooms.js and the
+//                discovery counter to tell projects apart.
+//   title        full name, shown in dialogs and cards
+//   code         small label at the top of the dialog, e.g. 'BENCH 01 / IN PROGRESS'
+//   status       'wip' or 'completed' (see above)
+//   art          fallback illustration from js/ui/project-art.js when there is
+//                no displaySrc: 'led-card' | 'robot' | 'nfc' | 'cluster' | 'controller'
+//   wallTitle    short uppercase name for the gallery frame (optional)
+//   displaySrc   main photo: shown on the bench/gallery frame and at the top of the dialog
+//   featured     {cover, highlight, coverPosition?}: show a card below the
+//                studio. cover is the card photo, highlight its one-line hook.
+//                Leave it out to keep a project off the featured row.
+//   summary      one sentence, shown in the project list and under the dialog title
+//   description  a paragraph on what it is and how it works
+//   lessons      shown as "What I learned: ..."
+//   tags         short keywords; the first three appear on featured cards
+//   photos       [{src, caption}] gallery of images inside the dialog
+//   github       link to the source; leave '' to hide the button
+//
+// Adding a new project:
+//   1. Put its images in assets/images/projects/ (WebP, about 1600px wide max).
+//   2. Copy an existing entry below and change the fields.
+//   3. 'completed': nothing else to do, it gets the next gallery frame.
+//      'wip': also give it a bench spot in BENCH_SLOTS in js/game/rooms.js.
+//
+// Finishing a project: change status to 'completed', update `code` (e.g.
+// 'EXHIBIT 03 / REV 1'), and point displaySrc at your best photo.
+// =============================================================================
 export const projects = [
   {
     id: 'stm32-card',
@@ -31,10 +59,10 @@ export const projects = [
     code: 'EXHIBIT 02 / SMTA',
     status: 'completed', art: 'robot', wallTitle: 'TEAM FISHIES',
     displaySrc: './assets/images/projects/team-fishies-3d.webp',
-    featured: {cover: './assets/images/projects/team-fishies-mentor-giant-check.webp', coverPosition: 'center 40%', highlight: 'Tied for first in round 1, then won round 3 outright at the SMTA Bright Manufacturing Challenge.'},
+    featured: {cover: './assets/images/projects/team-fishies-mentor-giant-check.webp', coverPosition: 'center 40%', highlight: 'Tied for first in round 1 (PCB design), then won round 3 outright at the SMTA Bright Manufacturing Challenge.'},
     summary: 'A custom PIC18-based line-following robot built for the SMTA Bright Manufacturing Challenge.',
     description: 'Worked with Team Fishies to develop the electronics for a line follower using optical sensors, motor drivers, and a PIC18F47Q43. The project combined schematic capture, PCB layout, firmware, assembly, and real-world testing.',
-    lessons: 'We tied for first in round 1 and won first place outright in round 3. Layout reviews reinforced the importance of trace widths, silkscreen clearances, sensor placement, and getting eyes on the board before fabrication.',
+    lessons: 'We tied for first in round 1, the PCB design round, and won first place outright in round 3. Layout reviews reinforced the importance of trace widths, silkscreen clearances, sensor placement, and getting eyes on the board before fabrication.',
     tags: ['PIC18F47Q43', 'Altium', 'Robotics', 'SMTA'],
     photos: [
       {src:'./assets/images/projects/team-fishies-3d.webp',caption:'Competition board — 3D assembly view with motors and sensor wing'},
