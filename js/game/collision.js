@@ -1,6 +1,7 @@
 // Collidable furniture footprints in world coordinates. A character's position
 // represents their shoes/feet, not their whole sprite; this preserves sensible
 // depth-based walking in front of work surfaces and display plinths.
+import {galleryFrames,roomWidth} from './rooms.js';
 export const COLLIDERS = Object.freeze({
   lobby: [
     {name:'reception desk', x:1034, y:461, w:304, h:133},
@@ -10,15 +11,15 @@ export const COLLIDERS = Object.freeze({
     {name:'right planter', x:1258, y:508, w:64, h:67}
   ],
   workshop: [
-    {name:'electronics workbench', x:294, y:480, w:1314, h:123},
-    {name:'plant', x:182, y:520, w:56, h:56},
-    {name:'rework lessons trolley',x:1610,y:468,w:126,h:63}
+    {name:'electronics workbench', x:294, y:480, w:1762, h:123},
+    {name:'capstone bench', x:2084, y:480, w:372, h:123},
+    {name:'plant', x:182, y:520, w:56, h:56}
   ],
   gallery: [
-    {name:'STM32 display plinth', x:517, y:480, w:261, h:124},
-    {name:'robot display plinth', x:1032, y:480, w:267, h:124},
+    // One plinth under each framed project; these follow the gallery layout.
+    ...galleryFrames.map(f=>({name:`${f.project.id} plinth`, x:f.cx-131, y:480, w:262, h:124})),
     {name:'left planter', x:275, y:506, w:69, h:64},
-    {name:'right planter', x:1654, y:515, w:66, h:62}
+    {name:'right planter', x:roomWidth('gallery')-96, y:515, w:66, h:62}
   ]
 });
 

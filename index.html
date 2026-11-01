@@ -20,17 +20,39 @@
       <button class="nav-link" id="project-index" type="button">All projects</button>
     </nav>
     <div class="top-actions">
-      <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> LOFI: OFF</button>
+      <button id="audio-toggle" class="audio-toggle" data-audio-toggle type="button" aria-pressed="false"><span class="note" aria-hidden="true">♫</span> <span data-audio-label>LOFI: OFF</span></button>
       <button id="resume-link" class="resume-link" type="button">RESUME ▣</button>
     </div>
   </header>
 
   <main>
-    <section class="intro" aria-label="Introduction"><div>
-      <div class="kicker"><span class="star">✦</span> JESSE SILVA <span class="divider">/</span> Computer Engineering • UMass Lowell</div>
-      <h1>Somewhere between <em>an art gallery</em><br>and an electronics lab.</h1>
-      <p>Come on in. Finished builds are hanging in the gallery; the new ideas are probably scattered across the workbench.</p>
-    </div><div class="intro-actions"><a class="primary" href="#game-area">ENTER THE STUDIO <span>↓</span></a><button class="secondary" id="hero-projects" type="button">VIEW PROJECTS <span>↗</span></button></div></section>
+    <section class="title-screen" aria-labelledby="title-name">
+      <div class="title-inner">
+        <div class="led-board">
+          <span class="silk silk-tl" aria-hidden="true">JS-01 · REV 2.0</span>
+          <span class="silk silk-tr" aria-hidden="true">U1 · LED MATRIX</span>
+          <h1 id="title-name" class="sr-only">Jesse Silva</h1>
+          <canvas id="led-title" aria-hidden="true"></canvas>
+          <span class="silk silk-bl" aria-hidden="true">COMPUTER ENGINEERING · UMASS LOWELL</span>
+          <button id="splash" class="splash" type="button" title="Another one">Just keep switching!</button>
+        </div>
+        <p class="tagline">Somewhere between <em>an art gallery</em> and an electronics lab.</p>
+        <nav class="title-menu" aria-label="Studio menu">
+          <a class="menu-btn menu-primary" id="menu-enter" href="#game-area">Enter the Studio</a>
+          <button class="menu-btn" id="hero-projects" type="button">Projects</button>
+          <button class="menu-btn" data-open="about" type="button">About Me</button>
+          <button class="menu-btn" data-open="resume" type="button">Résumé</button>
+          <div class="menu-row">
+            <button class="menu-btn menu-icon" data-audio-toggle type="button" aria-pressed="false" aria-label="Lofi music" title="Lofi music">♫</button>
+            <button class="menu-btn" data-room="workshop" type="button">Current Work</button>
+            <button class="menu-btn" data-open="contact" type="button">Contact</button>
+            <a class="menu-btn menu-icon" id="menu-github" href="https://github.com/jesseUML" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub">&lt;/&gt;</a>
+          </div>
+        </nav>
+      </div>
+      <span class="title-corner title-corner-l" aria-hidden="true">STUDIO REV 2.0</span>
+      <span class="title-corner title-corner-r" aria-hidden="true">BUILT AFTER HOURS ✦</span>
+    </section>
 
     <section id="game-area" class="game-shell" aria-label="Walkable portfolio studio">
       <div class="game-topbar"><div><span class="indicator"></span><strong id="room-label">01 / THE LOBBY</strong><span class="room-subtitle" id="room-subtitle">A WARM WELCOME</span></div><div class="game-top-right"><span id="discovery-label">0 / 5 EXHIBITS DISCOVERED</span><button id="help" type="button">? CONTROLS</button></div></div>
@@ -46,7 +68,10 @@
         <div class="room-tabs" role="group" aria-label="Go to room"><button data-room="workshop" type="button">WORKSHOP</button><button data-room="lobby" class="active" type="button">LOBBY</button><button data-room="gallery" type="button">GALLERY</button></div>
       </div>
     </section>
-    <section class="bottom-strip"><div><div class="strip-label">NOW EXHIBITING</div><h2>Built, debugged, <em>occasionally fried.</em></h2><p>Hardware has a story. Click any exhibit for design details, things learned, and links to the project.</p></div><div class="strip-actions"><button class="primary" id="browse-all" type="button">BROWSE ALL PROJECTS <span>↗</span></button><button class="secondary" data-room="lobby" type="button">ABOUT THE BUILDER <span>→</span></button></div></section>
+    <section class="featured" aria-labelledby="featured-heading">
+      <div class="bottom-strip"><div><div class="strip-label">NOW EXHIBITING</div><h2 id="featured-heading">Built, debugged, <em>occasionally fried.</em></h2><p>No time for the tour? These are the highlights. Each card opens the full story: design details, what went wrong, and what I learned.</p></div><div class="strip-actions"><button class="primary" id="browse-all" type="button">BROWSE ALL PROJECTS <span>↗</span></button><button class="secondary" data-room="lobby" type="button">ABOUT THE BUILDER <span>→</span></button></div></div>
+      <div class="featured-grid" id="featured-grid"></div>
+    </section>
   </main>
   <footer class="footer"><span>© <span id="year"></span> JESSE'S STUDIO</span><span>MADE WITH CAFFEINE, COPPER & CURIOSITY</span><a href="#game-area">BACK TO THE STUDIO ↑</a></footer>
 
@@ -77,6 +102,7 @@
   </dialog>
   <dialog id="list-dialog" class="dialog list-dialog" aria-labelledby="list-heading"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow">THE STUDIO COLLECTION</span><button id="close-list" class="close-dialog" type="button" aria-label="Close">✕</button></div><h2 id="list-heading">Every project has a story.</h2><p class="modal-summary">A quick way through the portfolio — no walking required.</p><div id="all-projects-list" class="all-projects-list"></div></div></dialog>
   <dialog id="help-dialog" class="dialog help-dialog" aria-labelledby="help-heading"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow">YOUR VISITOR'S GUIDE</span><button id="close-help" class="close-dialog" type="button" aria-label="Close">✕</button></div><h2 id="help-heading">Welcome, wanderer.</h2><p>Use <strong>A/D</strong> or <strong>←/→</strong> to walk around. Press <strong>W/S</strong> to move toward or away from the wall. Walk up to anything marked with a sparkle, then press <strong>E</strong> or <strong>Enter</strong> to interact. You can also click exhibits directly.</p><p>Use the doors to explore the workshop and gallery, or the buttons below the game to jump between rooms. The room displays are decorative; the project details are real.</p><button id="help-ok" type="button" class="primary">LET'S EXPLORE →</button></div></dialog>
+  <div id="toast" class="toast" popover="manual" role="status" aria-live="polite"><span class="toast-led" aria-hidden="true"></span><div><strong id="toast-title">EXHIBIT DISCOVERED</strong><span id="toast-body"></span></div></div>
   <audio id="lofi-audio" src="./assets/audio/night-shift-lofi.wav" preload="none" loop></audio>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import {ROOM_INFO,roomObjects,WORLD_W,WALK_MIN,WALK_MAX} from './rooms.js';
+import {ROOM_INFO,roomObjects,roomWidth,WALK_MIN,WALK_MAX} from './rooms.js';
 import {drawRoom,drawCharacter,drawMarker,txt,box,r} from './art.js';
 import {moveWithCollision} from './collision.js';
 const W=1200,H=675;
@@ -14,7 +14,7 @@ export class StudioGame{
   bind(){const codes={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyW:'up',ArrowUp:'up',KeyS:'down',ArrowDown:'down'};
     window.addEventListener('keydown',e=>{
       if(document.querySelector('dialog[open]'))return;
-      if(e.target instanceof HTMLElement && ['INPUT','TEXTAREA','BUTTON'].includes(e.target.tagName))return;
+      if(e.target instanceof HTMLElement && ['INPUT','TEXTAREA','BUTTON','A','SELECT'].includes(e.target.tagName))return;
       if(codes[e.code]){e.preventDefault();this.keys.add(codes[e.code]);}
       if(['KeyE','Enter','Space'].includes(e.code)&&!e.repeat){e.preventDefault();this.interactNearest()}
     });
@@ -36,11 +36,11 @@ export class StudioGame{
   interactNearest(){if(document.querySelector('dialog[open]'))return;const obj=this.nearestObject();if(obj)this.activate(obj)}
   activate(item){if(item.type==='door')this.toRoom(item.target,item.id);else this.inspect(item)}
   toRoom(room,source){if(!ROOM_INFO[room])return;this.room=room;this.x=source?.includes('to-lobby')?(source.startsWith('gallery')?250:240):room==='gallery'?300:room==='workshop'?310:800;
-    this.y=624;this.camera=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.pointerX=-1;this.nearest=null;this.changeUi();this.notify(`WELCOME TO ${ROOM_INFO[room].name}`);}
+    this.y=624;this.camera=Math.max(0,Math.min(roomWidth(this.room)-W,this.x-W*.5));this.pointerX=-1;this.nearest=null;this.changeUi();this.notify(`WELCOME TO ${ROOM_INFO[room].name}`);}
   changeUi(){const ri=ROOM_INFO[this.room];document.getElementById('room-label').textContent=`${ri.number} / ${ri.name}`;document.getElementById('room-subtitle').textContent=ri.subtitle;for(const button of document.querySelectorAll('.room-tabs [data-room]'))button.classList.toggle('active',button.dataset.room===this.room)}
   tick(dt){if(this.paused)return;const dx=(Number(this.keys.has('right'))-Number(this.keys.has('left')));const dy=(Number(this.keys.has('down'))-Number(this.keys.has('up')));
     const speed=this.reduced?190:210;const length=Math.hypot(dx,dy)||1;
-    const wantedX=Math.max(44,Math.min(WORLD_W-44,this.x+dx/length*speed*dt));
+    const wantedX=Math.max(44,Math.min(roomWidth(this.room)-44,this.x+dx/length*speed*dt));
     const wantedY=Math.max(WALK_MIN,Math.min(WALK_MAX,this.y+dy/length*speed*.52*dt));
     const moved=moveWithCollision(this.room,this.x,this.y,wantedX-this.x,wantedY-this.y);
     const travelled=Math.hypot(moved.x-this.x,(moved.y-this.y)*1.65);
@@ -53,14 +53,14 @@ export class StudioGame{
       this.walkDirection=Math.abs(dx)>=Math.abs(dy)?'side':(dy>0?'front':'back');
     }else this.walkBlend=Math.max(0,this.walkBlend-dt*7);
     this.x=moved.x;this.y=moved.y;if(dx&&this.walking)this.facing=dx;
-    const target=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.camera+=(target-this.camera)*Math.min(1,dt*7);this.nearest=this.nearestObject();
+    const target=Math.max(0,Math.min(roomWidth(this.room)-W,this.x-W*.5));this.camera+=(target-this.camera)*Math.min(1,dt*7);this.nearest=this.nearestObject();
     const hint=document.getElementById('interact-hint');hint.hidden=!this.nearest; if(this.nearest)hint.innerHTML=`PRESS <kbd>E</kbd> — ${this.nearest.label}`;
     const over=this.pointed();this.canvas.style.cursor=over?'pointer':'default';
   }
   frame(ms){const dt=this.last?Math.min(.05,(ms-this.last)/1000):0;this.last=ms;this.time=ms*.001;this.tick(dt);
     const c=this.c;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W,H);
-    const markerFor=obj=>obj.markerY ?? (obj.type==='door'?350:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='scope'?374:obj.type==='resume'?412:obj.type==='revisions'?355:300);
-    const labelFor=obj=>obj.labelY ?? (obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?286:obj.type==='scope'?330:obj.type==='resume'?363:obj.type==='revisions'?310:258);
+    const markerFor=obj=>obj.markerY ?? (obj.type==='door'?298:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='resume'?412:obj.type==='revisions'?355:300);
+    const labelFor=obj=>obj.labelY ?? (obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?240:obj.type==='resume'?363:obj.type==='revisions'?310:258);
     c.save();c.translate(-Math.round(this.camera),0);drawRoom(c,this.room,this.reduced?0:this.time,this.camera);
     for(const obj of this.objects()){
       const x=obj.x;if(x<this.camera-130||x>this.camera+W+130)continue;
@@ -68,7 +68,7 @@ export class StudioGame{
       drawMarker(c,x,markerFor(obj),this.reduced?0:this.time,near||selected);
       if(near||selected){
         const yy=labelFor(obj);
-        c.save();c.font='bold 13px monospace';let ww=Math.max(162,c.measureText(obj.label).width+28);const lx=Math.max(0,Math.min(WORLD_W-ww,x-ww/2));box(c,lx,yy,ww,31,'#222b39e9','#eec58c',2);txt(c,obj.label,lx+ww/2,yy+20,13,'#ffe1b7','center');c.restore();
+        c.save();c.font='bold 13px monospace';let ww=Math.max(162,c.measureText(obj.label).width+28);const lx=Math.max(0,Math.min(roomWidth(this.room)-ww,x-ww/2));box(c,lx,yy,ww,31,'#222b39e9','#eec58c',2);txt(c,obj.label,lx+ww/2,yy+20,13,'#ffe1b7','center');c.restore();
       }
     }
     drawCharacter(c,this.x,this.y,this.reduced?0:this.time,this.walking,this.facing,this.stepPhase,this.reduced?Math.min(.22,this.walkBlend):this.walkBlend,this.walkDirection);
