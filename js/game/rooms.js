@@ -19,11 +19,11 @@ export const roomObjects={
     {id:'mcu-cluster',type:'project',x:1058,y:452,projectId:'mcu-cluster',label:'MCU CLUSTER',hint:'WORK IN PROGRESS'},
     {id:'capstone-controller',type:'project',x:1461,y:452,projectId:'capstone-controller',label:'CAPSTONE ELECTRONICS',hint:'WORK IN PROGRESS'},
     {id:'scope',type:'scope',x:400,y:441,label:'OSCILLOSCOPE',hint:'LISSAJOUS / TWO FUNCTION GENERATORS'},
+    {id:'revisions',type:'revisions',x:1669,y:435,label:'REWORK & LESSONS',hint:'FAILED REVISIONS / DEBUG NOTES'},
   ],
   gallery:[
     {id:'gallery-to-lobby',type:'door',x:110,y:440,target:'lobby',label:'RETURN TO LOBBY',hint:'BACK TO THE LOBBY'},
     {id:'stm32-card',type:'project',x:650,y:360,projectId:'stm32-card',label:'STM32 BUSINESS CARD',hint:'FINISHED / EXHIBIT 01'},
     {id:'team-fishies',type:'project',x:1180,y:370,projectId:'team-fishies',label:'TEAM FISHIES',hint:'FINISHED / EXHIBIT 02'},
-    {id:'revisions',type:'revisions',x:1550,y:354,label:'THE REVISION WALL',hint:'SUCCESS ISN’T ALWAYS REV A'},
   ]
 };

@@ -4,3 +4,12 @@
 @media(max-width:980px){.top-links{display:none}.intro-chips{display:none}.game-footer{flex-direction:column}.room-tabs{justify-content:center}.controls-desktop{font-size:10px}.bottom-strip{padding-left:0;padding-right:0;align-items:start;flex-direction:column}.footer{margin:0 16px}}
 @media(max-width:650px){.topbar{height:67px}.brand{font-size:11px;gap:7px}.brand-mark{width:34px;height:34px;font-size:22px}.brand small{font-size:8px}.audio-toggle{font-size:0;padding:9px 11px}.audio-toggle span{font-size:18px}.resume-link{font-size:9px;padding:10px}.intro{padding:38px 20px 29px}.intro h1{font-size:clamp(29px,7vw,39px)}.kicker{font-size:9px}.game-shell{margin:0 5px}.game-topbar{padding:0 8px;font-size:9px}.room-subtitle,#discovery-label{display:none}.game-container canvas{min-height:255px;object-fit:contain}.scene-caption{font-size:9px;bottom:8px;left:7px}.controls-desktop{display:none}.mobile-controls{display:flex;width:100%;justify-content:space-between;gap:12px;align-items:center}.mobile-controls>div{display:grid;grid-template-columns:repeat(4,45px);gap:5px}.pad-btn,#touch-interact{background:#3a3946;border:1px solid #8a7566;color:#f3d6b2;font:700 15px var(--mono);padding:13px 0;touch-action:none}#touch-interact{font-size:10px;padding:16px 12px}.room-tabs{width:100%}.room-tabs button{flex:1;font-size:9px;padding:8px 0}.game-footer{padding:10px}.bottom-strip{padding:40px 14px 53px}.strip-actions{width:100%}.strip-actions button{flex:1;font-size:10px}.footer{flex-direction:column;font-size:9px}.all-projects-list{grid-template-columns:1fr}.dialog-inner{padding:22px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Physical board photographs and CAD imagery — each opens at its native resolution. */
+.modal-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:23px 0 16px}
+.modal-photos[hidden]{display:none}
+.modal-photo{display:flex;flex-direction:column;gap:10px;padding:9px;border:1px solid #726456;background:#222839;transition:border-color .18s,transform .18s}
+.modal-photo:hover,.modal-photo:focus-visible{border-color:#eac28b;transform:translateY(-2px)}
+.modal-photo img{display:block;width:100%;height:172px;object-fit:contain;background:#131926}
+.modal-photo span{font:11px/1.6 var(--mono);color:#e4c5a5}
+@media(max-width:540px){.modal-photos{grid-template-columns:1fr}.modal-photo img{height:190px}}

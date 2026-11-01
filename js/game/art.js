@@ -59,10 +59,129 @@ function bench(c,x,y,w=400){box(c,x,y,w,21,'#8a614d','#2b242c',5);r(c,x+15,y+22,
 function pcb(c,x,y,w=90,h=46,col='#225d55'){box(c,x,y,w,h,col,'#c8a76d',3);for(let i=0;i<12;i++){const xx=x+8+seeded(i+35)*(w-18),yy=y+8+seeded(i+57)*(h-14);r(c,xx,yy,6,3,'#caaf69');if(i%3===0)r(c,xx+4,yy+2,3,11,'#9ab2a6')}box(c,x+w*.35,y+h*.26,w*.24,h*.42,'#172933','#c2c6ae',2)}
 function scope(c,x,y,time){box(c,x,y,172,117,'#222b31','#889393',7);box(c,x+12,y+13,122,84,'#0c262a','#51736c',3);r(c,x+17,y+18,112,74,'#0d2e32');for(let i=0;i<=6;i++){r(c,x+17+i*18,y+18,1,74,'#82e6c02d')}for(let i=0;i<=4;i++)r(c,x+17,y+18+i*18,112,1,'#82e6c02d');c.save();c.beginPath();c.rect(x+17,y+18,112,74);c.clip();c.beginPath();for(let i=0;i<=180;i++){const t=i/180*TAU;const ph=time*.72;const sx=x+73+52*Math.sin(3*t+ph);const sy=y+54+31*Math.sin(2*t+ph*.49);if(i===0)c.moveTo(sx,sy);else c.lineTo(sx,sy)}c.strokeStyle='#8effcf';c.lineWidth=2.6;c.shadowColor='#73ffc3';c.shadowBlur=9;c.stroke();c.restore();for(const yy of [y+28,y+53,y+78]){r(c,x+145,yy,14,12,'#748486');r(c,x+148,yy+2,8,7,'#33383c')}r(c,x+15,y+103,18,4,'#b2d7bc');txt(c,'X-Y',x+89,y+107,10,'#b1f7de','center')}
 function fg(c,x,y){box(c,x,y,139,69,'#42444a','#92938c',5);box(c,x+11,y+12,65,38,'#1b3332','#7d988c',3);txt(c,'1.0kHz',x+19,y+28,9,'#a1eec2');txt(c,'SINE 1:1.5',x+16,y+43,8,'#91c8bc');for(let k=0;k<3;k++){r(c,x+92+k*13,y+24,9,11,'#9d9b90');r(c,x+92+k*13,y+40,9,5,'#333c40')}txt(c,'FG',x+13,y+62,8,'#f0b981')}
-function rework(c,x,y){box(c,x,y,179,103,'#3b3d45','#a7a199',6);box(c,x+8,y+11,71,45,'#1c3032','#859889',2);txt(c,'350°C',x+16,y+36,20,'#f5be72');box(c,x+85,y+11,75,45,'#192d32','#839589',2);txt(c,'300°C',x+92,y+35,17,'#96d5c6');for(let i=0;i<3;i++)r(c,x+12+i*23,y+72,12,10,['#a98d77','#767c80','#aa8e71'][i]);r(c,x+150,y+77,10,10,'#70caaa');txt(c,'REWORK  2CH',x+10,y+97,9,'#c2b8a7');}
-function iron(c,x,y){r(c,x,y,94,9,'#c2bcad');r(c,x-27,y-6,35,19,'#33474d');r(c,x+92,y+1,37,3,'#ad9d7b');r(c,x+15,y-1,7,11,'#c77d55');box(c,x-35,y+12,58,22,'#292e34','#8e8c82',3);r(c,x-24,y+20,29,8,'#bd895c')}
-function hotAir(c,x,y){c.save();c.translate(x,y);c.rotate(-.35);box(c,0,0,74,24,'#474651','#adb0a4',3);r(c,16,4,33,17,'#b6aaa0');r(c,73,8,36,9,'#a6a69d');r(c,108,10,19,5,'#776763');c.restore()}
-function hotPlate(c,x,y){box(c,x,y,135,60,'#414850','#9a9c90',4);box(c,x+12,y+6,110,21,'#737f80','#c3c3aa',4);r(c,x+20,y+11,92,10,'#d78565');box(c,x+11,y+35,61,18,'#1f3438','#77968e',2);txt(c,'165°C',x+16,y+49,11,'#f3b27a');r(c,x+97,y+39,10,10,'#74c8b1')}
+function rework(c,x,y){
+  // Two tools, one temperature-controlled chassis: hot air + iron, not
+  // two separate stations. Panel is readable even at game scale.
+  radial(c,x+88,y+60,154,90,'#edb27b',.055);
+  box(c,x,y,179,103,'#333a43','#b7b2a6',6);
+  r(c,x+4,y+5,171,9,'#52565a');
+  box(c,x+9,y+16,72,46,'#142c32','#809d94',3);
+  box(c,x+91,y+16,75,46,'#152e32','#819f98',3);
+  txt(c,'IRON',x+16,y+27,9,'#b6dbc4');txt(c,'AIR',x+99,y+27,9,'#a9d8d0');
+  txt(c,'350',x+14,y+51,22,'#fac48d');txt(c,'300',x+95,y+51,22,'#a8ecdd');
+  txt(c,'°C',x+60,y+51,10,'#ecb17c');txt(c,'°C',x+146,y+51,10,'#9cceca');
+  r(c,x+86,y+17,2,78,'#92928a');
+  for(const k of [0,1]){
+    const xx=x+22+k*84;
+    r(c,xx,y+69,13,8,'#948b83');
+    r(c,xx+22,y+69,13,8,'#645d5a');
+    r(c,xx+46,y+69,8,9,k===0?'#f8bf79':'#83d5c6');
+    c.beginPath();c.arc(xx+30,y+89,5,0,TAU);c.fillStyle='#161b24';c.fill();
+    c.strokeStyle='#bd9f78';c.lineWidth=2;c.stroke();
+  }
+  txt(c,'DUAL REWORK • 2 CH',x+87,y+101,9,'#ddcfb8','center');
+}
+function iron(c,x,y){
+  // Iron cradle with wire guard, brass-wool cleaner and handle.
+  box(c,x-22,y+17,105,28,'#252c35','#92918a',4);
+  box(c,x-13,y+21,26,19,'#735336','#c19e69',2);
+  for(let k=0;k<5;k++)line(c,x-9+k*5,y+24,x-13+k*6,y+36,'#dfbd6a',2);
+  for(let k=0;k<3;k++)line(c,x+30+k*13,y+25,x+34+k*13,y+40,'#a7a49a',3);
+  r(c,x+3,y+8,83,12,'#252d36');r(c,x+17,y+7,48,14,'#c3ab8f');
+  r(c,x+69,y+7,18,12,'#45464a');r(c,x+85,y+11,34,4,'#a9b0a5');
+  r(c,x+112,y+12,18,2,'#d7c39a');
+  r(c,x+34,y+17,13,3,'#e4bb7e');
+}
+function hotAir(c,x,y){
+  // Holstered blower with a thick handle and nozzle clearly separate from iron.
+  box(c,x-19,y+19,108,30,'#34383e','#8d908b',4);
+  r(c,x-12,y+23,23,19,'#1e2730');
+  c.save();c.translate(x,y);c.rotate(-.16);
+  box(c,0,0,94,29,'#59575b','#b9b6a9',4);
+  box(c,15,6,51,17,'#d7cbbb','#777778',2);
+  r(c,33,8,4,13,'#77777a');r(c,43,8,4,13,'#77777a');
+  r(c,87,9,36,11,'#aaa9a4');r(c,119,12,17,5,'#8d8a87');
+  c.restore();
+  // Routing follows the handpieces to the chassis behind them.
+  c.strokeStyle='#151d27';c.lineWidth=5;c.beginPath();
+  c.moveTo(x+9,y+29);c.bezierCurveTo(x-3,y+66,x-72,y+68,x-111,y+49);c.stroke();
+}
+function hotPlate(c,x,y){
+  // Low-profile ceramic PCB preheater: clearly a raised heating surface, with
+  // thermal warning stripes, a board resting on top and front temperature UI.
+  radial(c,x+66,y+22,135,70,'#ed9b60',.105);
+  r(c,x+15,y+58,15,8,'#252c35');r(c,x+108,y+58,15,8,'#252c35');
+  box(c,x,y+22,138,43,'#444953','#abb1aa',5);
+  box(c,x+8,y+3,122,26,'#c1beb6','#e3d7bb',4);
+  r(c,x+13,y+7,112,15,'#8c9390');
+  for(let j=0;j<5;j++)r(c,x+17+j*22,y+10,10,9,'#7d8585');
+  // Small PCB being preheated above the ceramic surface.
+  box(c,x+40,y-7,60,23,'#27584d','#d8b77c',2);
+  r(c,x+48,y-2,13,9,'#142b34');r(c,x+70,y-2,16,8,'#182a32');
+  for(let j=0;j<4;j++)r(c,x+48+j*13,y+12,7,2,'#d9b981');
+  box(c,x+11,y+38,65,19,'#19323a','#82a39a',2);
+  txt(c,'165°C',x+17,y+52,12,'#fdc58d');
+  for(let k=0;k<3;k++)r(c,x+89+k*11,y+42,7,8,'#abb6ac');
+  txt(c,'HOT',x+102,y+35,8,'#e8c48e','center');
+}
+function repairLessonsCart(c,x,y){
+  // A separate rolling tray immediately BESIDE the main ESD workbench.
+  // It holds a spare/failed card and a small row of capacitors for rework notes.
+  radial(c,x+57,y+135,110,80,'#df9b69',.09);
+  box(c,x+2,y+35,126,18,'#77534a','#d2aa7a',3);
+  r(c,x+10,y+54,7,104,'#514249');r(c,x+115,y+54,7,104,'#514249');
+  box(c,x+7,y+100,115,9,'#694d45','#b78e70',2);
+  for(const wx of [22,111]){r(c,x+wx-7,y+158,13,8,'#33323b');r(c,x+wx-4,y+159,7,5,'#959493')}
+  // Propped card with intentional 'failed / rework' tape marker.
+  c.save();c.translate(x+17,y+3);c.rotate(-.085);
+  box(c,0,0,75,39,'#204d48','#baac81',3);
+  for(let j=0;j<3;j++)for(let i=0;i<4;i++)r(c,9+i*16,8+j*9,10,5,'#adae9f');
+  r(c,2,27,29,12,'#c79968');txt(c,'R1',x*0+17,36,10,'#231f2b','center');
+  c.restore();
+  // Short schematic: three ceramic capacitors in series, as a visual lesson
+  // motif, not a claim about the real reset-line circuit topology.
+  box(c,x+84,y+8,42,30,'#d8c6a8','#7d675d',2);
+  line(c,x+89,y+23,x+96,y+23,'#594746',1.4);
+  for(const px of [97,108,119]){
+    line(c,x+px,y+18,x+px,y+28,'#594746',1.4);
+    line(c,x+px+3,y+18,x+px+3,y+28,'#594746',1.4);
+    if(px<119)line(c,x+px+3,y+23,x+px+11,y+23,'#594746',1.4);
+  }
+  r(c,x+32,y+51,67,14,'#282c34');txt(c,'REWORK',x+65,y+61,10,'#f1c18b','center');
+  r(c,x+21,y+109,91,34,'#342c32');txt(c,'DEBUG',x+66,y+124,10,'#ebc291','center');
+  txt(c,'LESSONS',x+66,y+137,10,'#a9cdc3','center');
+}
+function architecturePlan(c,x,y){
+  // A pinned architecture printout, not an imaginary manufactured memory card.
+  // High-level planned hierarchy; actual worker count remains a design target.
+  c.save();
+  box(c,x+5,y+7,224,124,'#1e222d','#121923',5);
+  box(c,x,y,224,124,'#263748','#c7ac80',4);
+  for(let gx=12;gx<224;gx+=13)r(c,x+gx,y+3,1,117,'#6d93923b');
+  for(let gy=9;gy<124;gy+=13)r(c,x+4,y+gy,218,1,'#6d93923b');
+  r(c,x+12,y+0,43,7,'#e0bb80');
+  txt(c,'MCU CLUSTER / PLAN',x+112,y+18,11,'#f0d3ac','center');
+  // Rounded rectangles and deliberate connectors form a little tree.
+  const node=(xx,yy,ww,hh,label,fill='#2b6266')=>{
+    box(c,x+xx,y+yy,ww,hh,fill,'#a8d1c7',2);
+    txt(c,label,x+xx+ww/2,y+yy+hh/2+3,8,'#f3eee2','center');
+  };
+  node(68,26,88,22,'SUPERVISOR','#4a5b69');
+  line(c,x+112,y+48,x+112,y+59,'#c3dfd4',2);
+  line(c,x+58,y+59,x+166,y+59,'#c3dfd4',2);
+  line(c,x+58,y+59,x+58,y+67,'#c3dfd4',2);
+  line(c,x+166,y+59,x+166,y+67,'#c3dfd4',2);
+  node(18,67,79,21,'MANAGER A');
+  node(127,67,79,21,'MANAGER B');
+  for(const mid of [58,166]){
+    line(c,x+mid,y+88,x+mid,y+99,'#c3dfd4',2);
+    const ox=mid===58?17:126;
+    box(c,x+ox,y+99,82,16,'#425462','#a6bda9',2);
+    for(let k=0;k<4;k++)r(c,x+ox+11+k*18,y+104,8,7,'#f4cc87');
+  }
+  txt(c,'WORKER CARDS ×4 MCU EACH',x+112,y+123,7,'#eac794','center');
+  c.restore();
+}
 function laptop(c,x,y){radial(c,x+75,y+50,155,100,'#f2a263',.16);box(c,x,y,148,103,'#20232d','#867b77',6);box(c,x+9,y+8,130,84,'#4a3132','#b27d60',2);r(c,x+15,y+17,118,12,'#784c42');txt(c,'main.c',x+25,y+27,10,'#ffd09a');for(let i=0;i<5;i++)r(c,x+25,y+38+i*10,75-(i%3)*11,3,['#e9a86a','#99c5b8','#d59b78'][i%3]);r(c,x-16,y+103,178,13,'#63616b');r(c,x+40,y+108,65,2,'#b8a3a0')}
 function drawRobot(c,x,y){c.save();c.translate(x,y);box(c,-84,-44,168,72,'#dab580','#fbe0a7',6);box(c,-55,-34,110,43,'#28615e','#c3dbbd',4);r(c,-30,-26,55,24,'#253942');line(c,2,-50,2,-89,'#ccbc9b',6);r(c,-5,-99,14,12,'#f5bf74');for(const xx of [-68,68]){c.beginPath();c.arc(xx,33,22,0,TAU);c.fillStyle='#151d28';c.fill();c.lineWidth=6;c.strokeStyle='#92a5a6';c.stroke()}c.restore()}
 function artCard(c,x,y,w,h,kind){box(c,x,y,w,h,'#272e39','#b99d7b',7);box(c,x+14,y+14,w-28,h-62,'#1b3b39','#605c58',3);let px=x+31,py=y+36,pw=w-62,ph=h-113;
@@ -75,10 +194,11 @@ function pedestal(c,x,y,w=200){box(c,x-w/2,y,w,34,'#767078','#bcb0a0',5);box(c,x
 function drawGallery(c,time){wall(c,'gallery');floor(c,'gallery');rug(c,720,570,450,70);ceilingLights(c,[[405,121,.7],[900,122,.8],[1445,120,.7]],time);sign(c,588,94,550,81,'THE FINISHED COLLECTION','SOMETHING HANDMADE, SOMETHING LEARNED');
   // moulding, spotlights, polished frames
   r(c,0,185,WORLD_W,5,'#857b7a');r(c,0,480,WORLD_W,4,'#585263');
-  artCard(c,496,215,305,239,'card');artCard(c,1012,215,305,239,'robot');artCard(c,1418,229,275,225,'rev');
-  for(const xx of [645,1160,1553]){r(c,xx-50,186,100,7,'#9b816b');radial(c,xx,285,160,160,'#ffbf79',.10)}
-  pedestal(c,647,485,245);pedestal(c,1164,485,248);pedestal(c,1555,493,215);r(c,580,486,137,7,'#d49f68');r(c,1104,486,117,7,'#d49f68');
-  txt(c,'EXHIBIT 01',650,610,17,'#e5cfb4','center');txt(c,'EXHIBIT 02',1160,610,17,'#e5cfb4','center');txt(c,'PROCESS / REVISION',1560,610,14,'#b8c7bf','center');
+  artCard(c,496,215,305,239,'card');artCard(c,1012,215,305,239,'robot');
+  for(const xx of [645,1160]){r(c,xx-50,186,100,7,'#9b816b');radial(c,xx,285,160,160,'#ffbf79',.10)}
+  pedestal(c,647,485,245);pedestal(c,1164,485,248);r(c,580,486,137,7,'#d49f68');r(c,1104,486,117,7,'#d49f68');
+  // Negative space on this wall is intentional: only complete projects hang here.
+  line(c,1415,454,1690,454,'#907d74',2);
   door(c,111,450,'LOBBY','lobby');plant(c,310,543,.8);plant(c,1690,552,.75);
 }
 function drawLobby(c,time,camera){wall(c,'lobby');floor(c,'lobby');rug(c,847,559,360,90);skyWindow(c,515,105,420,263,'lobby',time,camera);ceilingLights(c,[[345,110,.65],[1105,122,.8],[1445,105,.6]],time);
@@ -101,59 +221,101 @@ function drawWorkshop(c,time,camera){wall(c,'workshop');floor(c,'workshop');skyW
   // big ESD bench; tools along rear and active PCB near front
   bench(c,300,486,1300);r(c,347,496,1170,17,'#1b4745');r(c,347,511,1170,6,'#628980');
   scope(c,302,367,time);fg(c,480,415);
-  laptop(c,730,359);rework(c,1175,371);iron(c,1360,414);hotAir(c,1350,390);hotPlate(c,1508,415);
+  laptop(c,730,359);
+  architecturePlan(c,937,352);
+  rework(c,1175,371);iron(c,1370,426);hotAir(c,1376,386);hotPlate(c,1500,410);
+  repairLessonsCart(c,1609,367);
   // bench tools, components, solder spool
-  pcb(c,590,451,112,44,'#20574d');pcb(c,1006,450,111,47,'#27505e');pcb(c,1408,464,112,37,'#2a5960');
+  pcb(c,590,451,112,44,'#20574d');pcb(c,1408,464,112,37,'#2a5960');
   r(c,562,524,23,15,'#cda973');r(c,1051,521,18,17,'#9da2a5');r(c,1570,523,28,11,'#dfb27b');
-  // corkboard of sketches
-  box(c,1569,179,120,154,'#7d564b','#c39a71',5);r(c,1580,191,100,131,'#c9af87');r(c,1590,207,76,44,'#f1dfba');txt(c,'REV B?',1597,224,11,'#45362b');for(let i=0;i<4;i++)line(c,1595,265+i*12,1660,265+i*12,'#7f6757',2);
+  // The repair lessons display is on its own cart to the right of the bench.
   door(c,110,450,'LOBBY','lobby');plant(c,209,558,.75);
   // end-of-bench warm pool and small LEDs
   radial(c,922,460,450,130,'#fac47c',.06);
   for(const [x,y,col] of [[644,462,'#f5bd6a'],[1035,471,'#6ce2c4'],[1430,477,'#e6ac5e']]){radial(c,x,y,19,19,col,.18);r(c,x-2,y-2,4,4,col)}
 }
 export function drawRoom(c,room,time,camera){if(room==='gallery')drawGallery(c,time);else if(room==='workshop')drawWorkshop(c,time,camera);else drawLobby(c,time,camera)}
-export function drawCharacter(c,x,feet,time,walking,facing){
-  // Little side-to-side two-step with alternate planted/lifted shoes,
-  // opposing arm swing and a little jacket/head bob. All art is vector-like
-  // canvas pixels so the animation works without any external sprite sheet.
-  const cycle=walking?Math.sin(time*11.5):0;
-  const stride=walking?cycle*7:0;
-  const liftLeft=walking?Math.max(0,cycle)*5:0;
-  const liftRight=walking?Math.max(0,-cycle)*5:0;
-  const bob=walking?Math.abs(cycle)*2.4:Math.sin(time*1.6)*.65;
-  c.save();c.translate(Math.round(x),Math.round(feet-bob));c.scale(facing,1);
-  radial(c,0,4,32,11,'#11131b',.35);
-  // Legs and shoes: opposing legs step forward and lift slightly.
-  r(c,-13+stride*.55,-33-liftLeft,11,29,'#303b53');
-  r(c,3-stride*.55,-33-liftRight,11,29,'#29384d');
-  r(c,-17+stride*.75,-6-liftLeft,17,7,'#131b26');
-  r(c,3-stride*.75,-6-liftRight,17,7,'#141d2a');
-  r(c,-15+stride*.75,-6-liftLeft,7,2,'#82808a');
-  r(c,4-stride*.75,-6-liftRight,7,2,'#82808a');
-  // Far arm goes behind the torso, near arm swings opposite the foot.
-  r(c,-24-stride*.42,-65+Math.abs(cycle)*2,10,27,'#6f6063');
-  r(c,-25-stride*.42,-40+Math.abs(cycle)*2,9,7,'#c88f70');
-  // Warm jacket/backpack and central seam.
-  r(c,-19,-72,39,42,'#bc7959');
-  r(c,-19,-70,8,36,'#61545d');
-  r(c,-9,-65,22,32,'#d79871');
-  r(c,0,-65,2,34,'#84564c');
-  r(c,-9,-36,19,5,'#e9bb87');
-  r(c,17+stride*.42,-65,9,26,'#d8a37c');
-  r(c,18+stride*.42,-40+Math.max(0,cycle)*2,8,6,'#d3a17e');
-  // Head with subtle motion and an occasional idle blink.
-  const lean=walking?Math.round(cycle*.9):0;
-  r(c,-7+lean,-79,14,10,'#c98d6a');
-  r(c,-15+lean,-109,30,31,'#dfad87');
-  r(c,-17+lean,-110,34,12,'#27252e');
-  r(c,-18+lean,-103,7,14,'#27252e');
-  r(c,12+lean,-105,5,9,'#27252e');
-  const blink=time%5.3>5.15;
-  if(blink)r(c,1+lean,-94,12,1,'#34343e');
-  else{r(c,1+lean,-96,4,3,'#34343e');r(c,9+lean,-95,3,3,'#34343e');}
-  r(c,3+lean,-84,8,2,'#9a6555');
-  r(c,13,-52,8,11,'#ece1c6');r(c,15,-49,4,4,'#88c2af');
+// An eight-pose, distance-driven pixel-art walk cycle. A shoe stays on the
+// floor through its stance phase while the other lifts and steps forward.
+// The pose clock advances from actual distance travelled, not elapsed time,
+// so walking into a wall cannot animate the feet in place.
+const WALK_POSES=[
+  {foot: 22,lift:0}, {foot: 7,lift:0}, {foot:-8,lift:0}, {foot:-22,lift:0},
+  {foot:-18,lift:7}, {foot:-5,lift:14}, {foot:11,lift:13}, {foot:22,lift:5}
+];
+function limb(c,ax,ay,bx,by,width,fill){
+  c.save();c.strokeStyle=fill;c.lineWidth=width;c.lineCap='square';
+  c.lineJoin='bevel';c.beginPath();c.moveTo(Math.round(ax),Math.round(ay));
+  c.lineTo(Math.round(bx),Math.round(by));c.stroke();c.restore();
+}
+function leg(c,hipX,pose,blend,near){
+  const ankleX=Math.round(hipX+(pose.foot-hipX)*blend);
+  const lift=Math.round(pose.lift*blend);
+  const kneeX=Math.round(hipX+(ankleX-hipX)*.54+((near?1:-1)*lift*.20));
+  const kneeY=-23-Math.round(lift*.22);
+  const color=near?'#35455e':'#263349';
+  limb(c,hipX,-36,kneeX,kneeY,12,color);
+  limb(c,kneeX,kneeY,ankleX,-10-lift,11,color);
+  // The toe and heel visibly separate from the floor during the swing phase.
+  r(c,ankleX-7,-9-lift,13,7,color);
+  r(c,ankleX-10,-5-lift,22,7,near?'#101823':'#19212c');
+  r(c,ankleX+3,-4-lift,8,2,'#707e87');
+}
+function arm(c,shoulderX,armSwing,behind){
+  const elbowX=shoulderX+(behind?-8:6)+armSwing*.60;
+  const wristX=elbowX+(behind?-3:7)+armSwing*.42;
+  const sleeve=behind?'#705861':'#ca8361';
+  limb(c,shoulderX,-64,elbowX,-51,11,sleeve);
+  limb(c,elbowX,-51,wristX,-39,9,sleeve);
+  r(c,Math.round(wristX-4),-41,9,8,'#dea682');
+}
+export function drawCharacter(c,x,feet,time,walking,facing,stepPhase=0,blend=walking?1:0,direction='side'){
+  const b=Math.max(0,Math.min(1,blend));
+  const index=Math.floor((((stepPhase%(Math.PI*2))+(Math.PI*2))%(Math.PI*2))/(Math.PI*2)*8)%8;
+  const lead=WALK_POSES[index],trail=WALK_POSES[(index+4)%8];
+  const bob=b*(index%4===1||index%4===2?3:0)+(1-b)*Math.sin(time*1.5)*.55;
+  const swing=b*Math.round(11*Math.sin(index*Math.PI/4));
+  c.save();c.translate(Math.round(x),Math.round(feet-bob));
+  // Character points in the travel direction; depth movement gets a distinct
+  // front/back view instead of always showing the same side-on pose.
+  if(direction==='side')c.scale(facing,1);
+  else c.scale(.96,1);
+  // Stationary shadow helps ground the sprite instead of floating over tiles.
+  radial(c,0,2,37,9,'#0c1320',.54);
+  const projected=direction==='side'?1:.73;
+  if(direction!=='side')c.scale(projected,1);
+  // Far leg and rear arm, then near leg in front of the jacket hem.
+  leg(c,7,trail,b,false);
+  arm(c,-14,swing,true);
+  leg(c,-7,lead,b,true);
+  // Shoes stay below the coat; jacket follows a slight weight shift.
+  r(c,-21,-73,42,39,'#4c3f4b');
+  r(c,-18,-72,36,40,'#bd7959');
+  r(c,-18,-72,8,35,'#64505c');
+  r(c,-10,-66,24,28,'#d69670');
+  r(c,0,-66,2,30,'#85564c');
+  r(c,-11,-36,23,5,'#efb983');
+  // The front arm swings opposite the leg, with a bent elbow and visible hand.
+  arm(c,17,-swing,false);
+  r(c,-7,-81,14,11,'#b97f5f');
+  const headTilt=b*(index===2?-1:index===6?1:0);
+  r(c,-15+headTilt,-109,30,30,'#dfab85');
+  r(c,-17+headTilt,-112,34,12,'#282730');
+  r(c,-18+headTilt,-103,7,13,'#282730');
+  r(c,12+headTilt,-106,5,10,'#282730');
+  if(direction!=='back'){
+    const blink=(time%5.3>5.15);
+    if(blink)r(c,1+headTilt,-95,12,2,'#36313a');
+    else{
+      r(c,1+headTilt,-97,4,4,'#292d39');
+      r(c,10+headTilt,-96,3,3,'#292d39');
+    }
+    r(c,3+headTilt,-84,8,2,'#9a6555');
+  }else{
+    r(c,-11,-106,27,20,'#2d2b36');
+  }
+  // Little clipped-on badge, a recognisable detail even while walking.
+  r(c,10,-57,9,12,'#f0dec0');r(c,12,-54,5,5,'#79bba9');
   c.restore();
 }
 export function drawMarker(c,x,y,time,near=false){const v=Math.sin(time*3)*4;c.save();c.shadowColor='#ffe1a8';c.shadowBlur=near?24:12;const color=near?'#ffe5b1':'#eec692';r(c,x-4,y-16+v,8,8,color);r(c,x-2,y-22+v,4,20,color);r(c,x-10,y-14+v,20,4,color);c.restore()}

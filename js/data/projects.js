@@ -11,6 +11,10 @@ export const projects = [
     description: 'Designed around the STM32G030 microcontroller with a multiplexed LED matrix and a six-axis inertial sensor. Different animations and interactions turn a business card into something you can actually demo.',
     lessons: 'Small footprints, decoupling placement, LED brightness, and physical rework all matter. Several revisions taught me more than the first successful power-on.',
     tags: ['STM32G030', 'Embedded C', 'IMU', 'PCB Layout'],
+    photos: [
+      {src:'./assets/images/projects/stm32-rev1-components.webp',caption:'Rev 1 — populated STM32 board and 8×8 LED array'},
+      {src:'./assets/images/projects/stm32-rev1-qr.webp',caption:'Rev 1 — PCB QR-code and contact side'}
+    ],
     github: ''
   },
   {
@@ -33,6 +37,10 @@ export const projects = [
     description: 'The next board combines an NXP NT3H2111 NFC tag, LIS2DW12 accelerometer, and LP5024 LED driver. The antenna and compact layout are important parts of the design.',
     lessons: 'Current focus: antenna/annular-ring clearance, component placement, power budget, and moving from board design into validation. Status and specifications can be edited as the build develops.',
     tags: ['NFC', 'LIS2DW12', 'LP5024', 'PCB Design'],
+    photos: [
+      {src:'./assets/images/projects/nfc-kicad-front.webp',caption:'KiCad render — NFC card front, LEDs and circuitry'},
+      {src:'./assets/images/projects/nfc-kicad-back.webp',caption:'KiCad render — antenna and NFC profile legend'}
+    ],
     github: ''
   },
   {
@@ -40,9 +48,9 @@ export const projects = [
     title: 'Modular MCU Cluster',
     code: 'BENCH 02 / CONCEPT',
     status: 'wip', location: 'bench', art: 'cluster',
-    summary: 'A small-scale compute cluster using multiple microcontrollers on modular worker cards.',
+    summary: 'Architecture study: a supervisor, manager controllers, and modular worker-MCU cards.',
     description: 'A supervisor/manager/worker architecture, with plug-in worker modules and a shared parallel bus. The long-term goal is a fun, visual demonstration of distributed computation on tiny processors.',
-    lessons: 'Exploring addressing, arbitration, programming access, signal integrity and performance limits. A raycaster demo is a goal, not a feature claimed to be complete.',
+    lessons: 'The blueprint is conceptual, not a photo of a manufactured module. I am exploring bus timing, addressing, programming access, signal integrity, and whether a raycaster demo can show distributed MCU computation.',
     tags: ['STM32', 'Digital Design', 'Bus Protocol', 'Hardware'],
     github: ''
   },

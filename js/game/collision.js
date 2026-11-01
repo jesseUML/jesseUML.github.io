@@ -11,12 +11,12 @@ export const COLLIDERS = Object.freeze({
   ],
   workshop: [
     {name:'electronics workbench', x:294, y:480, w:1314, h:123},
-    {name:'plant', x:182, y:520, w:56, h:56}
+    {name:'plant', x:182, y:520, w:56, h:56},
+    {name:'rework lessons trolley',x:1610,y:468,w:126,h:63}
   ],
   gallery: [
     {name:'STM32 display plinth', x:517, y:480, w:261, h:124},
     {name:'robot display plinth', x:1032, y:480, w:267, h:124},
-    {name:'revisions plinth', x:1442, y:488, w:227, h:117},
     {name:'left planter', x:275, y:506, w:69, h:64},
     {name:'right planter', x:1654, y:515, w:66, h:62}
   ]

@@ -9,7 +9,7 @@ A cozy little **three-room, walkable portfolio world**, styled like a late-night
 - **Gallery** — finished STM32 LED business card, Team Fishies robot, and a placeholder revision-wall exhibit.
 - **Nighttime atmosphere** — city windows, warm hanging lights, warm electronics screens, and a looping original instrumental lofi track (off by default).
 
-Walk with **A / D** or **Left / Right**, change depth with **W / S** or **Up / Down**, press **E** or **Enter** to inspect when near, or click an exhibit directly. Touch movement buttons and room shortcuts are included. A keyboard-independent project list lets visitors browse without using the game.
+Walk with **A / D** or **Left / Right**, change depth with **W / S** or **Up / Down**, press **E** or **Enter** to inspect when near, or click an exhibit directly. Walking uses eight distinct, distance-synchronized poses with grounded feet, arm swings, and a body bounce. Touch movement buttons and room shortcuts are included. A keyboard-independent project list lets visitors browse without using the game.
 
 ## Deploy to GitHub Pages
 
@@ -18,7 +18,7 @@ Create a repository named `YOUR_USERNAME.github.io`, put the contents of this fo
 ## Personalization
 
 - **`js/data/projects.js`**: Update titles, status, project details, technical tags, and GitHub links. Do not publish restricted or proprietary details.
-- **`js/data/site.js`**: Set optional GitHub, LinkedIn, email, and resume links. Add a résumé PDF at `assets/docs/resume.pdf` and set `resume: './assets/docs/resume.pdf'`. The resume button has a friendly placeholder until you do.
+- **`js/data/site.js`**: Set optional GitHub, LinkedIn, email, and resume links. The included one-page résumé is at `assets/docs/resume.pdf`, and the Resume button opens it. To update it, replace this file with another PDF using the same name.
 - **`js/game/rooms.js`**: Change each room's exhibits, portals, project coordinates, and interactions.
 - **`js/game/art.js`**: Entirely programmatic editable room artwork, lighting, furniture, instruments and player sprite. Room illustrations are intentionally original rather than copied from any game or third-party art pack.
 - **`js/game/engine.js`**: Walking controls, camera, rendering, room transitions and interaction detection.
@@ -32,3 +32,27 @@ Ideas: replace selected paintings with photographs of your actual boards, more i
 ## A note on accuracy
 
 Project summaries are intended as editable portfolio copy; review details before publishing. Nothing in the demo should be interpreted as an endorsement from your university or employer. The site intentionally has no contact form or tracking backend.
+
+## Latest exhibit updates
+
+- The workshop has a combined soldering-iron and hot-air station with two independent displays, distinct docks and a cleaning cup.
+- The hotplate is a ceramic-topped PCB preheater, with a raised plate, temperature controller and warning markings.
+- STM32 Business Card exhibit: two cropped photographs of the real Rev 1 card.
+- NFC Business Card exhibit: front and back KiCad renders.
+- Resume button opens the supplied one-page PDF at `assets/docs/resume.pdf`; the editable DOCX is intentionally not published.
+
+Project image entries live under `photos` in `js/data/projects.js`. All imagery is stored locally; no third-party image requests are needed.
+
+## V6 exhibition polish
+
+- The modular MCU cluster is represented as a **conceptual hierarchy diagram** (supervisor → managers → worker cards), on the workbench and in its project dialog — no fabricated hardware imagery.
+- Redundant floor-level labels beneath the gallery plinths were removed; wall-frame titles remain.
+- The workshop now depicts a single dual-output hot-air + soldering iron rework station, both handpieces in their holders, and an identifiable ceramic PCB hotplate.
+
+## V7 workshop layout
+
+- Failed revisions and capacitor-debugging notes have their own **little rolling rework cart beside the workbench** rather than a finished-project wall exhibit.
+- The small card features three stylized series capacitors as a visual reference. This is an educational motif, not the actual schematic of a defective Rev 1 card.
+- The gallery has two displays for completed work, without the duplicated labels beneath their pedestals.
+- The modular MCU computer is shown as a supervisor/manager/worker architecture study, not a manufactured SODIMM-like module.
+- The portfolio includes an accessible résumé PDF, cropped Rev 1 PCB photographs, and NFC KiCad front/back views.

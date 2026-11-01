@@ -5,7 +5,7 @@ const W=1200,H=675;
 export class StudioGame{
   constructor({canvas,notify,inspect,discover}){
     this.canvas=canvas;this.c=canvas.getContext('2d',{alpha:false});this.notify=notify;this.inspect=inspect;this.discover=discover;
-    this.room='lobby';this.x=800;this.y=624;this.camera=250;this.facing=1;this.walking=false;this.keys=new Set();this.pointerX=-1;this.pointerY=-1;
+    this.room='lobby';this.x=800;this.y=624;this.camera=250;this.facing=1;this.walking=false;this.stepPhase=0;this.walkBlend=0;this.walkDirection='side';this.keys=new Set();this.pointerX=-1;this.pointerY=-1;
     this.nearest=null;this.paused=false;this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.last=0;this.time=0;this.bind();this.changeUi();requestAnimationFrame(t=>this.frame(t));
   }
@@ -43,7 +43,15 @@ export class StudioGame{
     const wantedX=Math.max(44,Math.min(WORLD_W-44,this.x+dx/length*speed*dt));
     const wantedY=Math.max(WALK_MIN,Math.min(WALK_MAX,this.y+dy/length*speed*.52*dt));
     const moved=moveWithCollision(this.room,this.x,this.y,wantedX-this.x,wantedY-this.y);
-    this.walking=Math.abs(moved.x-this.x)+Math.abs(moved.y-this.y)>.05;
+    const travelled=Math.hypot(moved.x-this.x,(moved.y-this.y)*1.65);
+    this.walking=travelled>.05;
+    if(this.walking){
+      // One full 8-frame gait covers about 144 canvas pixels. Tying the
+      // animation to distance creates stance/plant frames and removes sliding.
+      this.stepPhase=(this.stepPhase+travelled*Math.PI*2/144)%(Math.PI*2);
+      this.walkBlend=Math.min(1,this.walkBlend+dt*9);
+      this.walkDirection=Math.abs(dx)>=Math.abs(dy)?'side':(dy>0?'front':'back');
+    }else this.walkBlend=Math.max(0,this.walkBlend-dt*7);
     this.x=moved.x;this.y=moved.y;if(dx&&this.walking)this.facing=dx;
     const target=Math.max(0,Math.min(WORLD_W-W,this.x-W*.5));this.camera+=(target-this.camera)*Math.min(1,dt*7);this.nearest=this.nearestObject();
     const hint=document.getElementById('interact-hint');hint.hidden=!this.nearest; if(this.nearest)hint.innerHTML=`PRESS <kbd>E</kbd> — ${this.nearest.label}`;
@@ -55,13 +63,13 @@ export class StudioGame{
     for(const obj of this.objects()){
       const x=obj.x;if(x<this.camera-130||x>this.camera+W+130)continue;
       const near=Math.abs(this.x-x)<112;const selected=(this.pointed()===obj);
-      drawMarker(c,x,(obj.type==='door'?350:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='scope'?374:obj.type==='resume'?412:obj.type==='revisions'?245:300),this.reduced?0:this.time,near||selected);
+      drawMarker(c,x,(obj.type==='door'?350:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='scope'?374:obj.type==='resume'?412:obj.type==='revisions'?355:300),this.reduced?0:this.time,near||selected);
       if(near||selected){
-        const yy=obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?286:obj.type==='scope'?330:obj.type==='resume'?363:258;
+        const yy=obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?286:obj.type==='scope'?330:obj.type==='resume'?363:obj.type==='revisions'?310:258;
         c.save();c.font='bold 13px monospace';let ww=Math.max(162,c.measureText(obj.label).width+28);const lx=Math.max(0,Math.min(WORLD_W-ww,x-ww/2));box(c,lx,yy,ww,31,'#222b39e9','#eec58c',2);txt(c,obj.label,lx+ww/2,yy+20,13,'#ffe1b7','center');c.restore();
       }
     }
-    drawCharacter(c,this.x,this.y,this.reduced?0:this.time,this.walking,this.facing);
+    drawCharacter(c,this.x,this.y,this.reduced?0:this.time,this.walking,this.facing,this.stepPhase,this.reduced?Math.min(.22,this.walkBlend):this.walkBlend,this.walkDirection);
     c.restore();
     // small room / navigation key at top, independent of camera
     box(c,15,15,200,32,'#171d2bce','#76645b',1);txt(c,`${ROOM_INFO[this.room].number}  ${ROOM_INFO[this.room].name}`,27,36,14,'#ffddb2');
