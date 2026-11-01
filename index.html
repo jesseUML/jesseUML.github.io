@@ -21,7 +21,7 @@
     </nav>
     <div class="top-actions">
       <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> LOFI: OFF</button>
-      <button id="resume-link" class="resume-link" type="button">RESUME ↗</button>
+      <button id="resume-link" class="resume-link" type="button">RESUME ▣</button>
     </div>
   </header>
 
@@ -51,6 +51,30 @@
   <footer class="footer"><span>© <span id="year"></span> JESSE'S STUDIO</span><span>MADE WITH CAFFEINE, COPPER & CURIOSITY</span><a href="#game-area">BACK TO THE STUDIO ↑</a></footer>
 
   <dialog id="info-dialog" class="dialog" aria-labelledby="modal-title"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow" id="modal-eyebrow">EXHIBIT / 01</span><button id="close-dialog" class="close-dialog" type="button" aria-label="Close">✕</button></div><div class="modal-art" id="modal-art" aria-hidden="true"></div><h2 id="modal-title"></h2><p id="modal-summary" class="modal-summary"></p><div id="modal-content" class="modal-content"></div><div id="modal-photos" class="modal-photos" hidden></div><div id="modal-tags" class="modal-tags"></div><div id="modal-links" class="modal-links"></div></div></dialog>
+  <dialog id="resume-dialog" class="dialog resume-dialog" aria-labelledby="resume-heading">
+    <div class="resume-dialog__inner">
+      <div class="resume-dialog__header">
+        <div class="resume-dialog__heading">
+          <span class="dialog-eyebrow">THE STUDIO / RESUME</span>
+          <h2 id="resume-heading">Jesse Silva · Résumé</h2>
+        </div>
+        <div class="resume-dialog__actions">
+          <a id="resume-download" href="./assets/docs/resume.pdf" download="Jesse_Silva_Resume.pdf">DOWNLOAD PDF ↓</a>
+          <a id="resume-external" href="./assets/docs/resume.pdf" target="_blank" rel="noopener noreferrer">OPEN IN TAB ↗</a>
+          <button id="close-resume" class="close-dialog" type="button" aria-label="Close résumé">✕</button>
+        </div>
+      </div>
+      <div class="resume-dialog__viewer">
+        <object id="resume-pdf" data="./assets/docs/resume.pdf#view=FitH" type="application/pdf" aria-label="Jesse Silva résumé PDF">
+          <div class="resume-dialog__fallback">
+            <p>Your browser couldn't display the PDF inline.</p>
+            <a href="./assets/docs/resume.pdf" target="_blank" rel="noopener noreferrer">Open résumé PDF in a new tab ↗</a>
+          </div>
+        </object>
+      </div>
+      <p class="resume-dialog__note">You can scroll and zoom the PDF here. If your browser doesn't support embedded PDFs, choose “Open in tab” or “Download PDF”.</p>
+    </div>
+  </dialog>
   <dialog id="list-dialog" class="dialog list-dialog" aria-labelledby="list-heading"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow">THE STUDIO COLLECTION</span><button id="close-list" class="close-dialog" type="button" aria-label="Close">✕</button></div><h2 id="list-heading">Every project has a story.</h2><p class="modal-summary">A quick way through the portfolio — no walking required.</p><div id="all-projects-list" class="all-projects-list"></div></div></dialog>
   <dialog id="help-dialog" class="dialog help-dialog" aria-labelledby="help-heading"><div class="dialog-inner"><div class="dialog-top"><span class="dialog-eyebrow">YOUR VISITOR'S GUIDE</span><button id="close-help" class="close-dialog" type="button" aria-label="Close">✕</button></div><h2 id="help-heading">Welcome, wanderer.</h2><p>Use <strong>A/D</strong> or <strong>←/→</strong> to walk around. Press <strong>W/S</strong> to move toward or away from the wall. Walk up to anything marked with a sparkle, then press <strong>E</strong> or <strong>Enter</strong> to interact. You can also click exhibits directly.</p><p>Use the doors to explore the workshop and gallery, or the buttons below the game to jump between rooms. The room displays are decorative; the project details are real.</p><button id="help-ok" type="button" class="primary">LET'S EXPLORE →</button></div></dialog>
   <audio id="lofi-audio" src="./assets/audio/night-shift-lofi.wav" preload="none" loop></audio>

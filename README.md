@@ -51,8 +51,16 @@ Project image entries live under `photos` in `js/data/projects.js`. All imagery 
 
 ## V7 workshop layout
 
-- Failed revisions and capacitor-debugging notes have their own **little rolling rework cart beside the workbench** rather than a finished-project wall exhibit.
+- Failed revisions and capacitor-debugging notes have their own **little rolling framed rework note beside the workbench** rather than a finished-project wall exhibit.
 - The small card features three stylized series capacitors as a visual reference. This is an educational motif, not the actual schematic of a defective Rev 1 card.
 - The gallery has two displays for completed work, without the duplicated labels beneath their pedestals.
 - The modular MCU computer is shown as a supervisor/manager/worker architecture study, not a manufactured SODIMM-like module.
 - The portfolio includes an accessible résumé PDF, cropped Rev 1 PCB photographs, and NFC KiCad front/back views.
+
+### Résumé viewer
+
+The top-bar Resume button and in-world résumé exhibit open the bundled one-page PDF inside a document-viewer dialog. It also includes Download PDF and Open in tab fallbacks. To update the résumé, replace `assets/docs/resume.pdf`.
+
+### Additional Team Fishies photos
+
+Three optional gallery photo slots are prepared in `js/data/projects.js` for `team-fishies-photo-1.webp`, `team-fishies-photo-2.webp`, and `team-fishies-photo-3.webp`. Their source images were not accessible in this editing session. Until these image files are placed in `assets/images/projects/`, the unavailable thumbnails are automatically removed. Replace the generic captions in the project data when the actual photo content is known.

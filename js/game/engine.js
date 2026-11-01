@@ -59,13 +59,15 @@ export class StudioGame{
   }
   frame(ms){const dt=this.last?Math.min(.05,(ms-this.last)/1000):0;this.last=ms;this.time=ms*.001;this.tick(dt);
     const c=this.c;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W,H);
+    const markerFor=obj=>obj.markerY ?? (obj.type==='door'?350:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='scope'?374:obj.type==='resume'?412:obj.type==='revisions'?355:300);
+    const labelFor=obj=>obj.labelY ?? (obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?286:obj.type==='scope'?330:obj.type==='resume'?363:obj.type==='revisions'?310:258);
     c.save();c.translate(-Math.round(this.camera),0);drawRoom(c,this.room,this.reduced?0:this.time,this.camera);
     for(const obj of this.objects()){
       const x=obj.x;if(x<this.camera-130||x>this.camera+W+130)continue;
       const near=Math.abs(this.x-x)<112;const selected=(this.pointed()===obj);
-      drawMarker(c,x,(obj.type==='door'?350:obj.type==='project'?(this.room==='workshop'?385:247):obj.type==='scope'?374:obj.type==='resume'?412:obj.type==='revisions'?355:300),this.reduced?0:this.time,near||selected);
+      drawMarker(c,x,markerFor(obj),this.reduced?0:this.time,near||selected);
       if(near||selected){
-        const yy=obj.type==='project'?(this.room==='workshop'?358:186):obj.type==='door'?286:obj.type==='scope'?330:obj.type==='resume'?363:obj.type==='revisions'?310:258;
+        const yy=labelFor(obj);
         c.save();c.font='bold 13px monospace';let ww=Math.max(162,c.measureText(obj.label).width+28);const lx=Math.max(0,Math.min(WORLD_W-ww,x-ww/2));box(c,lx,yy,ww,31,'#222b39e9','#eec58c',2);txt(c,obj.label,lx+ww/2,yy+20,13,'#ffe1b7','center');c.restore();
       }
     }
