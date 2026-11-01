@@ -18,7 +18,7 @@ export const roomObjects={
     {id:'nfc-card',type:'project',x:645,y:452,projectId:'nfc-card',label:'NFC BUSINESS CARD',hint:'PROTOTYPE / REV 2.01'},
     {id:'mcu-cluster',type:'project',x:1058,y:452,projectId:'mcu-cluster',label:'MCU CLUSTER',hint:'WORK IN PROGRESS',markerY:350,labelY:304},
     {id:'capstone-controller',type:'project',x:1461,y:452,projectId:'capstone-controller',label:'CAPSTONE ELECTRONICS',hint:'WORK IN PROGRESS'},
-    {id:'revisions',type:'revisions',x:1628,y:350,label:'REWORK & LESSONS',hint:'FRAMED NOTE / DEBUG STORY',markerY:300,labelY:255},
+    {id:'revisions',type:'revisions',x:1689,y:350,label:'REWORK & LESSONS',hint:'FRAMED NOTE / DEBUG STORY',markerY:264,labelY:220},
   ],
   gallery:[
     {id:'gallery-to-lobby',type:'door',x:110,y:440,target:'lobby',label:'RETURN TO LOBBY',hint:'BACK TO THE LOBBY'},

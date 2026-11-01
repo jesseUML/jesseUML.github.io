@@ -64,3 +64,11 @@ The top-bar Resume button and in-world résumé exhibit open the bundled one-pag
 ### Additional Team Fishies photos
 
 Three optional gallery photo slots are prepared in `js/data/projects.js` for `team-fishies-photo-1.webp`, `team-fishies-photo-2.webp`, and `team-fishies-photo-3.webp`. Their source images were not accessible in this editing session. Until these image files are placed in `assets/images/projects/`, the unavailable thumbnails are automatically removed. Replace the generic captions in the project data when the actual photo content is known.
+
+
+## V13 visual refinements
+
+- Main STM32 card artwork now shows the populated PCB face. The QR/contact side is its back.
+- NFC card now shows the component-rich face as the front, with the QR/contact render as the back.
+- Workbench has one combined, vertical black/teal 2-in-1 soldering + hot-air rework station, with a hot-air gun in the left holder and the iron in the right holder, following the supplied reference.
+- Framed rework note stays at its original vertical position, shifted to the far right with clearance from the hotplate. Workshop title and subtitle are horizontally centered.

@@ -13,8 +13,8 @@ export const projects = [
     lessons: 'Small footprints, decoupling placement, LED brightness, and physical rework all matter. Several revisions taught me more than the first successful power-on.',
     tags: ['STM32G030', 'Embedded C', 'IMU', 'PCB Layout'],
     photos: [
-      {src:'./assets/images/projects/stm32-rev1-front.webp',caption:'Rev 1 — front side with QR/contact layout'},
-      {src:'./assets/images/projects/stm32-rev1-back.webp',caption:'Rev 1 — populated side with STM32, LED matrix, and coin-cell holder'}
+      {src:'./assets/images/projects/stm32-rev1-front.webp',caption:'Rev 1 — populated front with STM32, LED array, and coin-cell holder'},
+      {src:'./assets/images/projects/stm32-rev1-back.webp',caption:'Rev 1 — back with QR code and contact details'}
     ],
     github: ''
   },
@@ -47,8 +47,8 @@ export const projects = [
     lessons: 'Current focus: antenna/annular-ring clearance, component placement, power budget, and moving from board design into validation. Status and specifications can be edited as the build develops.',
     tags: ['NFC', 'LIS2DW12', 'LP5024', 'PCB Design'],
     photos: [
-      {src:'./assets/images/projects/nfc-kicad-front.webp',caption:'KiCad render — NFC card front, LEDs and circuitry'},
-      {src:'./assets/images/projects/nfc-kicad-back.webp',caption:'KiCad render — antenna and NFC profile legend'}
+      {src:'./assets/images/projects/nfc-kicad-front.webp',caption:'KiCad render — front with NFC IC, LED components, and hardware'},
+      {src:'./assets/images/projects/nfc-kicad-back.webp',caption:'KiCad render — contact/QR back of the NFC card'}
     ],
     github: ''
   },
